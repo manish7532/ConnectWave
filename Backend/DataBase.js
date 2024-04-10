@@ -9,7 +9,11 @@ const userSchema = new Schema({
     profilePhoto: { type: String },
     country: { type: String },
     timezone: { type: String },
-    type: { type: String, enum: ['organisation', 'individual'], required: true }
+    type: { type: String, enum: ['organisation', 'individual'], required: true },
+    password: {
+        type: String,
+        required: true
+    }
 });
 
 // Organisations Schema
