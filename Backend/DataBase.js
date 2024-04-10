@@ -9,15 +9,15 @@ const userSchema = new Schema({
     profilePhoto: { type: String },
     country: { type: String },
     timezone: { type: String },
-    type: { type: String, enum: ['organisation', 'individual'], required: true },
+    type: { type: String, enum: ['organization', 'individual'], required: true },
     password: {
         type: String,
         required: true
     }
 });
 
-// Organisations Schema
-const organisationSchema = new Schema({
+// Organizations Schema
+const organizationSchema = new Schema({
     userID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     org_Name: { type: String, required: true },
     domain: { type: String },
@@ -96,7 +96,7 @@ const analyticsSchema = new Schema({
 
 // models
 const User = mongoose.model('User', userSchema);
-const Organisation = mongoose.model('Organisation', organisationSchema);
+const Organization = mongoose.model('Organization', organizationSchema);
 const Event = mongoose.model('Event', eventSchema);
 const Participant = mongoose.model('Participant', participantSchema);
 const InteractiveFeatures = mongoose.model('InteractiveFeatures', interactiveFeaturesSchema);
@@ -107,7 +107,7 @@ const Analytics = mongoose.model('Analytics', analyticsSchema);
 //exporting models
 module.exports = {
     User,
-    Organisation,
+    Organization,
     Event,
     Participant,
     InteractiveFeatures,
