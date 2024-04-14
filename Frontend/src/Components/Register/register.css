@@ -1,0 +1,33 @@
+body {
+    min-height: 100vh;
+    margin: 0px;
+    font-family: Poppins;
+    background-color: #001247;
+    
+}
+
+.form,
+select {
+    color: black;
+    background-color: white;
+    padding: 50px;
+    border-radius: 1cap;
+}
+
+.navanchor {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    transition: .3s all ease;
+}
+
+.regSignin {
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+    transition: .3s all ease;
+}
+
+.regSignin:hover,.navanchor:hover {
+    color: rgb(66, 146, 236);
+}
