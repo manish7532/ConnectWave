@@ -52,7 +52,6 @@ app.post('/api/register', (req, res) => {
             return res.status(500).send({ error: 'Error parsing form data' });
         }
 
-
         const email = fields.email[0];
         const firstname = fields.firstname[0];
         const lastname = fields.lastname[0];
@@ -88,24 +87,20 @@ app.post('/api/register', (req, res) => {
 
             await newUser.save();
 
-            // Create a folder for the user using their ID
             const userFolderPath = path.join(__dirname, '../uploads', newUser._id.toString());
             if (!fs.existsSync(userFolderPath)) {
                 fs.mkdirSync(userFolderPath);
             }
 
-            // Move the profile photo to the user's folder
             if (files.profilePhoto) {
                 const file = files.profilePhoto;
                 console.log(file)
                 const newFilePath = path.join(userFolderPath, file[0].originalFilename);
                 await fs.promises.rename(file[0].filepath, newFilePath);
 
-                // Update user profile photo path
                 await User.updateOne({ _id: newUser._id }, { $set: { profilePhoto: newFilePath } })
             }
 
-            // Respond with success message
             res.status(201).json(3);
 
         } catch (error) {
@@ -118,73 +113,61 @@ app.post('/api/register', (req, res) => {
 
 //org form post req
 app.post('/api/organization', (req, res) => {
-    // Create a new formidable form instance
+
     const form = formidable({
         keepExtensions: true,
         allowEmptyFiles: true,
         minFileSize: 0,
     });
 
-    // Parse the incoming form data
     form.parse(req, async (err, fields, files) => {
         if (err) {
             console.error('Formidable parsing error:', err);
             return res.status(500).send({ error: 'Error parsing form data' });
         }
 
-        // Extract form fields
         const { email, org_Name, domain } = fields;
         const logoFile = files.logo ? files.logo[0] : null;
-        // console.log(logoFile)
-        // console.log("--------------------------------------------------------------------------------------------")
-        // console.log(email, org_Name, domain)
-        // console.log("--------------------------------------------------------------------------------------------")
-        // console.log(fields.email[0])
-        // Validate required fields
+
         if (!email || !org_Name || !domain) {
-            return res.status(400).json({ error: 'Missing required fields' });
+            return res.status(400).json({ message: 'Missing required fields' });
         }
 
         const existingUser = await User.findOne({ email: email[0] });
 
         if (!existingUser) {
-            return res.json("User not found");
+            return res.status(202).json({ message: "User not found" });
         }
 
         try {
-            // Create a new organization record
+
             const newOrganization = new Organization({
                 userID: existingUser._id,
-                org_Name:org_Name[0],
-                domain:domain[0],
-                logo: '', // Logo will be updated later
+                org_Name: org_Name[0],
+                domain: domain[0],
+                logo: '',
             });
 
-            // Save the organization to the database
             await newOrganization.save();
 
-            // Create a folder for the organization using its ID
             const orgFolderPath = path.join(__dirname, '../Org_logo', newOrganization._id.toString());
             if (!fs.existsSync(orgFolderPath)) {
                 fs.mkdirSync(orgFolderPath);
             }
 
-            // If there's a logo file, save it in the organization's folder
             if (logoFile) {
                 const logoFilePath = path.join(orgFolderPath, logoFile.originalFilename);
                 await fs.promises.rename(logoFile.filepath, logoFilePath);
 
-                // Update the organization's logo path in the database
                 newOrganization.logo = logoFilePath;
                 await newOrganization.save();
             }
 
-            // Respond with success message
             res.status(201).json({ message: 'Organization registered successfully', organization: newOrganization });
 
         } catch (error) {
             console.error(error);
-            res.status(500).send({ error: 'Error saving organization' });
+            res.status(500).send({ message: 'Error saving organization' });
         }
     });
 });
