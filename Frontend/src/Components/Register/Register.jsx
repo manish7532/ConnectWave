@@ -86,7 +86,7 @@ function Register() {
             break;
           case 3:
             if (data.type == 'Organization') {
-              navigate(`./Organization`);
+              navigate(`./organization`);
             } else {
               toast.success('User registered successfully', {
                 position: "top-center"

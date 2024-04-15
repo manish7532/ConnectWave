@@ -1,0 +1,87 @@
+body {
+    margin: 0px;
+    font-family: Poppins;
+    height: 100vh;
+}
+
+.ctrls {
+    height: 22vh;
+    border-radius: 25px;
+    font-size: 5vh;
+    font-weight: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+
+.label {
+    font-size: 1.7vh;
+}
+
+.dnav {
+    background-color: rgb(5, 11, 43);
+    border-bottom: .3px solid rgb(53, 54, 60);
+}
+
+.meet {
+    text-decoration: none;
+    background-color: rgb(225, 89, 39);
+    transition: .3s all ease-in-out;
+}
+
+.meet:hover,
+.meet:active {
+    background-color: rgb(210, 64, 10);
+}
+
+.scheduled-events {
+    border-left: .3px solid rgb(53, 54, 60);
+    border-top-left-radius: 7px;
+    border-bottom-left-radius: 7px;
+    color: white;
+    height: 91.8vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main,
+.scheduled-events {
+    background-color: rgb(5, 11, 43);
+}
+
+
+.modal.fade .modal-dialog {
+    transform: scale(1.1);
+    transition: transform 0.5s ease-out;
+}
+
+.modal.in .modal-dialog {
+    transform: scale(1);
+}
+
+.modal-dialog {
+    width: 50% !important;
+    max-width: 450px;
+    max-height: 80vh;
+    margin-top: 15vh;
+    display: flex;
+    border: .2px solid rgb(127, 127, 127);
+    border-radius: 9px;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content,.mdalInp::placeholder,.mdalInp {
+    background-color: rgba(17, 17, 18, 0.4)!important;
+    backdrop-filter: blur(20px);
+    color: #ffffff!important;
+}
+
+
+.mLabel {
+    color: #ffffff;
+}

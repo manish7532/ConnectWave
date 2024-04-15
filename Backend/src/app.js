@@ -6,11 +6,12 @@ import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import formidable from 'formidable';
+import session from "express-session";
 import fs from 'fs';
 import dotenv from 'dotenv';
 import { Country } from 'country-state-city';
 
-dotenv.config();
+dotenv.config()
 
 const app = express();
 
@@ -32,6 +33,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 3000;
+
+app.use(session({
+    secret: 'anushka',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        maxAge: 10 * 24 * 60 * 60 * 1000 
+    }
+}));
+
 
 app.listen(PORT, () => {
     console.log(`http://localhost:${PORT}`);
@@ -170,5 +181,44 @@ app.post('/api/organization', (req, res) => {
             res.status(500).send({ message: 'Error saving organization' });
         }
     });
+});
+
+
+// Authentication middleware
+function isAuthenticated(req, res, next) {
+    if (req.session && req.session.user) {
+        return next();
+    } else {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+}
+
+//Login Route
+app.post('/api/login', async (req, res, next) => {
+    const { email, password } = req.body;
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(401).json({ error: "Incorrect username" });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: "Incorrect password" });
+        }
+
+        req.session.user = user;
+        return res.status(200).json({ message: "Login success", user });
+    } catch (error) {
+        console.error('An error occurred:', error);
+        return res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Logout route
+app.get('/api/logout', (req, res) => {
+    req.session.destroy();
 });
 
