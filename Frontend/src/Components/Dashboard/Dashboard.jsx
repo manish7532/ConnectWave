@@ -9,7 +9,7 @@ function Dashboard() {
 
   async function handleLogout() {
     try {
-      const response = await axios.get('/api/logout');
+      const response = await axios.get('http://localhost:3000/api/logout');
       console.log('Logged out successfully');
       localStorage.removeItem("token");
       navigate('/login');
@@ -29,7 +29,7 @@ function Dashboard() {
           return;
         }
 
-        const response = await axios.get('/api/verify', {
+        const response = await axios.get('http://localhost:3000/api/verify', {
           headers: {
             Authorization: `Bearer ${token}`
           }

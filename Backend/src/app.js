@@ -183,7 +183,6 @@ app.post('/api/login', async (req, res) => {
         if (!user) {
             return res.status(401).json({ error: "Incorrect username" });
         }
-
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
@@ -207,14 +206,11 @@ function isAuthenticated(req, res, next) {
     }
 
     const tokenWithoutBearer = token.split(' ')[1];
-
-    jwt.verify(tokenWithoutBearer, jwtSecret, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-        req.userId = decoded.userId;
-        next();
-    });
+    console.log(tokenWithoutBearer)
+    const decode = jwt.verify(tokenWithoutBearer, jwtSecret)
+    console.log('decode==>', decode);
+    req.userID = decode.userId
+    next();
 }
 
 //login verification route
@@ -224,7 +220,6 @@ app.get('/api/verify', isAuthenticated, (req, res) => {
 
 // Logout route 
 app.get('/api/logout', (req, res) => {
-    res.clearCookie('token');
     res.status(200).json({ message: 'Logged out successfully' });
 });
 
