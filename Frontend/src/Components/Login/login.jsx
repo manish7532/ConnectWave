@@ -21,7 +21,9 @@ function Login() {
                 toast.success("Login successful", {
                     position: "top-center"
                 });
-                localStorage.setItem("loggedIn",true)
+                
+                localStorage.setItem("token", res.data.token);
+            
                 navigate('/dashboard');
             } else {
                 toast.error(res.data, {

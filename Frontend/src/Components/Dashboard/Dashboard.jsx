@@ -1,23 +1,56 @@
 import React from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './dashboard.css'; 
-import logo from '../images/logo nav.png'; 
+import { useEffect } from 'react';
+import './dashboard.css';
+import logo from '../images/logo nav.png';
 
 function Dashboard() {
+
+  async function handleLogout() {
+    try {
+      const response = await axios.get('/api/logout');
+      console.log('Logged out successfully');
+      localStorage.removeItem("token");
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  }
+
   const navigate = useNavigate();
 
-  function handleLogout() {
-    axios.get('/api/logout')
-    .then(response => {
-      console.log('Logged out successfully');
-      localStorage.removeItem("loggedIn");
-      navigate('/login');
-    })
-    .catch(error => {
-      console.error('Logout error:', error);
-    });   
-  }
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+
+        const response = await axios.get('/api/verify', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.status === 200) {
+          console.log("User is authenticated");
+        } else {
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        navigate('/login');
+      }
+    };
+
+    checkAuthentication();
+  }, [navigate]);
+
+
+
   return (
     <div>
 

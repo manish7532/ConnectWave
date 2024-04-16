@@ -6,9 +6,9 @@ import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import formidable from 'formidable';
-import session from "express-session";
 import fs from 'fs';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import { Country } from 'country-state-city';
 
 dotenv.config()
@@ -33,16 +33,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 3000;
-
-app.use(session({
-    secret: 'anushka',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        maxAge: 10 * 24 * 60 * 60 * 1000 
-    }
-}));
-
 
 app.listen(PORT, () => {
     console.log(`http://localhost:${PORT}`);
@@ -105,7 +95,6 @@ app.post('/api/register', (req, res) => {
 
             if (files.profilePhoto) {
                 const file = files.profilePhoto;
-                console.log(file)
                 const newFilePath = path.join(userFolderPath, file[0].originalFilename);
                 await fs.promises.rename(file[0].filepath, newFilePath);
 
@@ -183,18 +172,10 @@ app.post('/api/organization', (req, res) => {
     });
 });
 
+const jwtSecret = 'anushka';
 
-// Authentication middleware
-function isAuthenticated(req, res, next) {
-    if (req.session && req.session.user) {
-        return next();
-    } else {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-}
-
-//Login Route
-app.post('/api/login', async (req, res, next) => {
+// Login Route
+app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email });
@@ -209,16 +190,41 @@ app.post('/api/login', async (req, res, next) => {
             return res.status(401).json({ error: "Incorrect password" });
         }
 
-        req.session.user = user;
-        return res.status(200).json({ message: "Login success", user });
+        const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '10d' });
+
+        return res.status(200).json({ message: "Login success", token });
     } catch (error) {
         console.error('An error occurred:', error);
         return res.status(500).json({ error: "Server error" });
     }
 });
 
-// Logout route
+// Middleware to verify JWT token
+function isAuthenticated(req, res, next) {
+    const token = req.headers.authorization;
+    if (!token || !token.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const tokenWithoutBearer = token.split(' ')[1];
+
+    jwt.verify(tokenWithoutBearer, jwtSecret, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        req.userId = decoded.userId;
+        next();
+    });
+}
+
+//login verification route
+app.get('/api/verify', isAuthenticated, (req, res) => {
+    res.status(200).json({ message: "User authorized" });
+});
+
+// Logout route 
 app.get('/api/logout', (req, res) => {
-    req.session.destroy();
+    res.clearCookie('token');
+    res.status(200).json({ message: 'Logged out successfully' });
 });
 

@@ -5,9 +5,8 @@ import Organization from "./Components/Organization/Organization"
 import Dashboard from "./Components/Dashboard/Dashboard"
 // import Meeting from "./components/Meeting/Meeting"
 // import ResetPass from './components/ResetPass/Resetpass'
-// import Chat from './components/Chat/Chat'
+// import Chat from "./components/Chat/Chat"
 import { Routes, Route } from 'react-router-dom'
-import ProtectedRoutes from "./Services/ProtectedRoutes"
 
 function App() {
 
@@ -19,9 +18,8 @@ function App() {
         <Route path='/register' element={<Register />} />
         <Route path='/register/organization' element={<Organization />} />
         <Route path='/login' element={<Login />} />
-        <Route path='/dashboard' element={<ProtectedRoutes />} >
-          <Route path="/dashboard" element={<Dashboard />}/>
-        </Route> 
+        {/* <Route path='/Chat' element={<Chat />} /> */}
+        <Route path='/dashboard' element={<Dashboard />} />
 
 
       </Routes> 
