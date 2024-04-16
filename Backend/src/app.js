@@ -172,7 +172,7 @@ app.post('/api/organization', (req, res) => {
     });
 });
 
-const jwtSecret = 'anushka';
+const jwtSecret = process.env.SECRET;
 
 // Login Route
 app.post('/api/login', async (req, res) => {
