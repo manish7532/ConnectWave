@@ -4,8 +4,12 @@ import logo from '../images/logo nav.png';
 import { Link } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 function Organization() {
+
+    const navigate = useNavigate()
+
     const [data, setData] = useState({
         email: "",
         org_Name: "",
@@ -41,6 +45,7 @@ function Organization() {
                     position: "top-center"
                 })
                 console.log('Organization registered successfully');
+                navigate('./login')
 
             } else if (response.status === 202) {
                 toast.error("User Does Not Exists", {

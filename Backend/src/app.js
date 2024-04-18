@@ -206,7 +206,6 @@ function isAuthenticated(req, res, next) {
     if (!token || !token.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
-
     const tokenWithoutBearer = token.split(' ')[1];
     const decode = jwt.verify(tokenWithoutBearer, jwtSecret)
     req.userID = decode.userId
@@ -223,20 +222,39 @@ app.get('/api/logout', (req, res) => {
     res.status(200).json({ message: 'Logged out successfully' });
 });
 
+<<<<<<< Updated upstream
 //resetpass
+=======
+
+>>>>>>> Stashed changes
 //generate otp function defination
 const generateOTP = () => {
     return otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
 };
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 //otp generate route
 app.post('/api/resetPass', async (req, res) => {
     try {
         const { email } = req.body;
         const user = await User.findOne({ email });
+<<<<<<< Updated upstream
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
         const otp = generateOTP();
+=======
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const otp = generateOTP();
+
+
+>>>>>>> Stashed changes
         const mailOptions = {
             from: process.env.EMAIL,
             to: email,
@@ -244,23 +262,46 @@ app.post('/api/resetPass', async (req, res) => {
             html: `<p>Your password reset OTP is: <strong>${otp}</strong></p><p>This OTP will expire in 5 minutes.</p>`,
         };
         sendEmail(mailOptions);
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         return res.status(200).json({ otp: otp });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 });
+<<<<<<< Updated upstream
 //change pass route
 app.post('/api/changePass', async (req, res) => {
     const { email, newPassword } = req.body;
+=======
+
+
+//change pass route 
+app.post('/api/changePass', async (req, res) => {
+    const { email, newPassword } = req.body;
+
+>>>>>>> Stashed changes
     try {
         const user = await User.findOne({ email });
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
+<<<<<<< Updated upstream
         await user.save();
+=======
+
+        await user.save();
+
+>>>>>>> Stashed changes
         return res.status(200).json({ message: 'Password has been reset successfully' });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal Server Error' });
     }
+<<<<<<< Updated upstream
 });
+=======
+});
+>>>>>>> Stashed changes

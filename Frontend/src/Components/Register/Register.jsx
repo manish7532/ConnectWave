@@ -7,6 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Country } from 'country-state-city';
 
+
 function Register() {
 
   const [data, setData] = useState({
@@ -28,7 +29,7 @@ function Register() {
     setCountries(fetchedCountries);
     setData((prevData) => ({
       ...prevData,
-      country: 'India',
+      country: 'AFG',
       type: 'Individual',
     }));
   }, []);
@@ -91,6 +92,7 @@ function Register() {
               toast.success('User registered successfully', {
                 position: "top-center"
               })
+              navigate('./login')
             }
             break;
           default:
@@ -101,7 +103,7 @@ function Register() {
           firstname: '',
           lastname: '',
           email: '',
-          country: '',
+          country: 'AFG',
           type: 'Individual',
           password: '',
           confirmPassword: '',
