@@ -4,13 +4,11 @@ import Register from "./Components/Register/Register"
 import Organization from "./Components/Organization/Organization"
 import Dashboard from "./Components/Dashboard/Dashboard"
 // import Meeting from "./components/Meeting/Meeting"
-// import ResetPass from './components/ResetPass/Resetpass'
 // import Chat from "./components/Chat/Chat"
+import ForgetPassword from './Components/ResetPass/ForgetPassword'
+import ResetPass from './Components/ResetPass/ResetPass'
 import { Routes, Route } from 'react-router-dom'
-
 function App() {
-
-
   return (
     <>
       <Routes>
@@ -20,11 +18,16 @@ function App() {
         <Route path='/login' element={<Login />} />
         {/* <Route path='/Chat' element={<Chat />} /> */}
         <Route path='/dashboard' element={<Dashboard />} />
-
-
-      </Routes> 
+        <Route path='/reset' element={<ForgetPassword />} />
+        <Route path="/resetPass" element={<ResetPass />} />
+      </Routes>
     </>
   )
 }
-
 export default App;
+
+
+
+
+
+

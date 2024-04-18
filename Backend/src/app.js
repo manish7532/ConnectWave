@@ -10,6 +10,8 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { Country } from 'country-state-city';
+import otpGenerator from 'otp-generator';
+import { sendEmail } from './resetPass/email.js';
 
 dotenv.config()
 
@@ -206,9 +208,7 @@ function isAuthenticated(req, res, next) {
     }
 
     const tokenWithoutBearer = token.split(' ')[1];
-    console.log(tokenWithoutBearer)
     const decode = jwt.verify(tokenWithoutBearer, jwtSecret)
-    console.log('decode==>', decode);
     req.userID = decode.userId
     next();
 }
@@ -223,3 +223,44 @@ app.get('/api/logout', (req, res) => {
     res.status(200).json({ message: 'Logged out successfully' });
 });
 
+//resetpass
+//generate otp function defination
+const generateOTP = () => {
+    return otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
+};
+//otp generate route
+app.post('/api/resetPass', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const otp = generateOTP();
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Password Reset OTP',
+            html: `<p>Your password reset OTP is: <strong>${otp}</strong></p><p>This OTP will expire in 5 minutes.</p>`,
+        };
+        sendEmail(mailOptions);
+        return res.status(200).json({ otp: otp });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+//change pass route
+app.post('/api/changePass', async (req, res) => {
+    const { email, newPassword } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+        return res.status(200).json({ message: 'Password has been reset successfully' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
