@@ -20,11 +20,8 @@ function App() {
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/reset' element={<ForgetPassword />} />
         <Route path="/resetPass" element={<ResetPass />} />
-<<<<<<< Updated upstream
-=======
 
 
->>>>>>> Stashed changes
       </Routes>
     </>
   )
