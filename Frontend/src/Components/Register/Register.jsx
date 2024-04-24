@@ -63,7 +63,7 @@ function Register() {
 
     try {
       if (data.password === data.confirmPassword) {
-        const response = await axios.post('http://localhost:3000/api/register', formData, {
+        const response = await axios.post('http://localhost:8000/api/register', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -122,7 +122,7 @@ function Register() {
       <div className="row m-0 text-light">
         <div className="col-8">
           <h5 className="text-light">
-            <img src={logo} height="50vh" alt="ConnectWave Logo" /> ConncetWave
+            <img src={logo} height="50vh" alt="ConnectWave Logo" /> ConnectWave
           </h5>
         </div>
         <div className="col-4 mt-2 d-flex justify-content-end">

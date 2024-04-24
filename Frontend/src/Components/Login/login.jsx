@@ -16,14 +16,14 @@ function Login() {
     async function submitHandler(e) {
         e.preventDefault();
         try {
-            const res = await axios.post("http://localhost:3000/api/login", data);
+            const res = await axios.post("http://localhost:8000/api/login", data);
             if (res.status === 200) {
                 toast.success("Login successful", {
                     position: "top-center"
                 });
-                
+                // Store token in local storage
                 localStorage.setItem("token", res.data.token);
-            
+                localStorage.setItem("user", JSON.stringify({ userdata: res.data.user }));
                 navigate('/dashboard');
             } else {
                 toast.error(res.data, {
@@ -50,7 +50,7 @@ function Login() {
                 <nav className="mt-3">
                     <div className="logo d-flex">
                         <img src={logo} height="50vh" alt="logo" />
-                        <h4 className="mt-3">ConncetWave</h4>
+                        <h4 className="mt-3">ConnectWave</h4>
                     </div>
                 </nav>
 

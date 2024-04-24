@@ -1,35 +1,42 @@
 import React from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import './dashboard.css';
 import logo from '../images/logo nav.png';
 
 function Dashboard() {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const handleJoinMeeting = () => {
+    document.getElementById('modalcls').click()
+    navigate('/meeting');
+  };
 
   async function handleLogout() {
     try {
-      const response = await axios.get('http://localhost:3000/api/logout');
+      const response = await axios.get('http://localhost:8000/api/logout');
       console.log('Logged out successfully');
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
       navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
   }
 
-  const navigate = useNavigate();
-
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
         const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem("user"));
         if (!token) {
           navigate('/login');
           return;
         }
 
-        const response = await axios.get('http://localhost:3000/api/verify', {
+        const response = await axios.get('http://localhost:8000/api/verify', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -49,21 +56,17 @@ function Dashboard() {
     checkAuthentication();
   }, [navigate]);
 
-
-
   return (
     <div>
 
       <nav className="navbar navbar-expand-lg text-light dnav" data-bs-theme="dark">
         <div className="container-fluid">
-
           <div className="d-flex align-items-center">
             <div className="logo">
               <img src={logo} height="40vh" alt="ConnectWave Logo" />
             </div>
             <h5 className="mt-2 ms-2">ConnectWave</h5>
           </div>
-
           <button
             className="navbar-toggler"
             type="button"
@@ -91,7 +94,7 @@ function Dashboard() {
 
               <li className="nav-item dropdown">
                 <a data-bs-toggle="dropdown" className="nav-icon nav-link pe-md-0">
-                  Profile
+                  {user && user.userdata.firstname}
                 </a>
                 <div className="dropdown-menu dropdown-menu-end">
                   <a href="#" className="dropdown-item">
@@ -115,13 +118,13 @@ function Dashboard() {
           <div className="col-sm-12 col-md-8 d-flex justify-content-center align-items-center">
             <div className="row">
               <div className="col-sm-6 mb-3">
-                <a href="#" className="meet ctrls">
+                <Link to={"/meeting"} className="meet ctrls">
                   <i className="fas fa-video mb-2"></i>
                   <span className="label">New Meeting</span>
-                </a>
+                </Link>
               </div>
               <div className="col-sm-6 mb-3">
-                <a href="#" className="btn btn-lg btn-primary ctrls" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                <a className="btn btn-lg btn-primary ctrls" data-bs-toggle="modal" data-bs-target="#exampleModal">
                   <i className="fas fa-plus mb-2"></i>
                   <span className="label">Join</span>
                 </a>
@@ -146,8 +149,8 @@ function Dashboard() {
                         </form>
                       </div>
                       <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" className="btn btn-primary">Join</button>
+                        <button type="button" className="btn btn-secondary" id='modalcls' data-bs-dismiss="modal">Close</button>
+                        <button type="button" className="btn btn-primary" onClick={handleJoinMeeting} >Join</button>
                       </div>
                     </div>
                   </div>
@@ -178,3 +181,4 @@ function Dashboard() {
 }
 
 export default Dashboard;
+

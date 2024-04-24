@@ -9,15 +9,52 @@ import formidable from 'formidable';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import { Server } from 'socket.io';
+import { createServer } from 'node:http';
 import { Country } from 'country-state-city';
 import otpGenerator from 'otp-generator';
 import { sendEmail } from './resetPass/email.js';
-
 dotenv.config()
 
 const app = express();
 
-Mongoose.connect(process.env.MONGO_URI);
+//socket connection
+const server = createServer(app);
+const io = new Server(server, {
+    cors: {
+      origin: '*',
+    }
+  });
+
+const connectedUsers = [];
+io.on('connection', (socket) => {
+    socket.on('joined', (user) => {
+        console.log(`${user} has joined`);
+        connectedUsers.push(user);
+        io.emit('userList', connectedUsers);
+        socket.user = user; 
+    });
+
+    socket.on('message', ({ user, message }) => {
+        io.emit('sendmessage', { user, message });
+    });
+
+    socket.on('disconnect', () => {
+        if (socket.user) {
+            const index = connectedUsers.indexOf(socket.user);
+            if (index !== -1) {
+                const userLeft = connectedUsers.splice(index, 1)[0];
+                console.log(`${userLeft} left`);
+                io.emit('userList', connectedUsers); 
+            } else {
+                console.log("User not found in connectedUsers array.");
+            }
+            delete socket.user; 
+        } else {
+            console.log("Socket user not defined.");
+        }
+    });
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,17 +66,21 @@ const corsOptions = {
     optionsSuccessStatus: 204,
 };
 
+Mongoose.connect(process.env.MONGO_URI)
+
 app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
-    console.log(`http://localhost:${PORT}`);
+server.listen(PORT, () => {
+    console.log(`http://localhost:${PORT}`)
 });
 
+
+app.get("/",(req,res)=>{res.send("hello this is node backend!!!")})
 
 //register form post req
 app.post('/api/register', (req, res) => {
@@ -99,7 +140,6 @@ app.post('/api/register', (req, res) => {
                 const file = files.profilePhoto;
                 const newFilePath = path.join(userFolderPath, file[0].originalFilename);
                 await fs.promises.rename(file[0].filepath, newFilePath);
-
                 await User.updateOne({ _id: newUser._id }, { $set: { profilePhoto: newFilePath } })
             }
 
@@ -111,7 +151,6 @@ app.post('/api/register', (req, res) => {
         }
     });
 });
-
 
 //org form post req
 app.post('/api/organization', (req, res) => {
@@ -193,7 +232,7 @@ app.post('/api/login', async (req, res) => {
 
         const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '10d' });
 
-        return res.status(200).json({ message: "Login success", token });
+        return res.status(200).json({ message: "Login success", token, user });
     } catch (error) {
         console.error('An error occurred:', error);
         return res.status(500).json({ error: "Server error" });
@@ -206,6 +245,7 @@ function isAuthenticated(req, res, next) {
     if (!token || !token.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
+
     const tokenWithoutBearer = token.split(' ')[1];
     const decode = jwt.verify(tokenWithoutBearer, jwtSecret)
     req.userID = decode.userId
@@ -226,6 +266,7 @@ app.get('/api/logout', (req, res) => {
 const generateOTP = () => {
     return otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
 };
+
 //otp generate route
 app.post('/api/resetPass', async (req, res) => {
     try {
@@ -237,7 +278,6 @@ app.post('/api/resetPass', async (req, res) => {
         }
 
         const otp = generateOTP();
-
 
         const mailOptions = {
             from: process.env.EMAIL,
@@ -252,7 +292,6 @@ app.post('/api/resetPass', async (req, res) => {
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 });
-
 
 //change pass route 
 app.post('/api/changePass', async (req, res) => {

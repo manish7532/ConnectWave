@@ -52,7 +52,7 @@ function ForgetPassword() {
                 <div className="row m-0 text-light">
                     <div className="col-8">
                         <h5 className="text-light">
-                            <img src={logo} height="50vh" alt="logo" /> ConncetWave
+                            <img src={logo} height="50vh" alt="logo" /> ConnectWave
                         </h5>
                     </div>
                     <div className="col-4 mt-2 d-flex justify-content-end">
