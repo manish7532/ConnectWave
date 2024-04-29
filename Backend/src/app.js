@@ -22,21 +22,31 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
     cors: {
-      origin: '*',
+        origin: [
+            "http://localhost:5173",
+            "http://192.168.99.186:5173",
+        ],
+        methods: ["GET", "POST"]
     }
-  });
+});
 
 const connectedUsers = [];
 io.on('connection', (socket) => {
     socket.on('joined', (user) => {
         console.log(`${user} has joined`);
-        connectedUsers.push(user);
-        io.emit('userList', connectedUsers);
-        socket.user = user; 
+        if (!connectedUsers.includes(user)) {
+            connectedUsers.push(user);
+            io.emit('userList', connectedUsers);
+        }
+        socket.user = user;
     });
 
     socket.on('message', ({ user, message }) => {
         io.emit('sendmessage', { user, message });
+    });
+
+    socket.on('emoji', (emojiObject) => {
+        io.emit('sendEmoji', {emojiObject});
     });
 
     socket.on('disconnect', () => {
@@ -45,13 +55,11 @@ io.on('connection', (socket) => {
             if (index !== -1) {
                 const userLeft = connectedUsers.splice(index, 1)[0];
                 console.log(`${userLeft} left`);
-                io.emit('userList', connectedUsers); 
+                io.emit('userList', connectedUsers);
             } else {
                 console.log("User not found in connectedUsers array.");
             }
-            delete socket.user; 
-        } else {
-            console.log("Socket user not defined.");
+            delete socket.user;
         }
     });
 });
@@ -80,7 +88,7 @@ server.listen(PORT, () => {
 });
 
 
-app.get("/",(req,res)=>{res.send("hello this is node backend!!!")})
+// app.get("/", (req, res) => { res.send("hello this is node backend!!!") })
 
 //register form post req
 app.post('/api/register', (req, res) => {

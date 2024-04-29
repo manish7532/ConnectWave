@@ -1,9 +1,10 @@
-
 body {
     font-family: "Poppins", sans-serif;
 }
+
 .leave {
-    position: fixed; /* Initially position at the bottom */
+    position: fixed;
+    /* Initially position at the bottom */
     bottom: 20px;
     right: 20px;
     background-color: #DC3545;
@@ -12,27 +13,61 @@ body {
     border-radius: 5px;
     cursor: pointer;
 }
+
 .mnav {
     background-color: rgb(5, 11, 43);
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
 }
+
 @media (max-width: 767px) {
+
+    #emoji {
+        bottom: 100px;
+    }
     .leave {
+        z-index: "1";
         position: fixed;
         top: 10px;
         right: 20px;
         bottom: auto;
     }
+    .plist {
+        height: 75vh !important; 
+        margin-top: 35px;
+    } 
 }
+
 @media (max-width: 848px) {
     .button-container {
         max-width: 100%;
-        overflow-x: auto; /* Enable horizontal scrolling */
+        overflow-x: auto;
+        /* Enable horizontal scrolling */
         white-space: nowrap;
     }
+
     .button-container .btn {
         display: inline-block;
         margin-right: 10px;
     }
+}
+@media (min-width:767px) {
+    .plist{
+        height: 87vh !important; 
+    }
+   
+}
+
+.emoji-container {
+    position: fixed;
+    top: 5vh;
+    height: 600px;
+    /* transform: translateX(-50%); */
+    /* animation: fadeOut 2s ease; */
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.emoji-container.hidden {
+    opacity: 0;
 }

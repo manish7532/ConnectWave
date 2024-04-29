@@ -17,7 +17,7 @@ const ChatApp = () => {
     setSocket(socket);
 
     socket.on("connect", () => {
-      socket.emit('joined', user.userdata.firstname);
+      socket.emit('joined', user.userdata.firstname + " " +user.userdata.lastname);
     });
     
   
@@ -37,21 +37,21 @@ const ChatApp = () => {
   const handleMessageSubmit = (e) => {
     e.preventDefault();
     if (message.trim() !== '' && socket) {
-      socket.emit('message', { user: user.userdata.firstname, message });
+      socket.emit('message', { user: user.userdata.firstname + " " +user.userdata.lastname, message });
       setMessage('');
     }
   };
 
   return (
-    <div className="chatpage" style={{ height: '87vh', overflow: 'auto'}}>
+    <div className="chatpage "  style={{ height: '87vh', overflow: 'hidden'}}>
       <div className="chatContainer" style={{ overflow: "hidden" }}>
-        <div className="col-md-4 col-sm-12 col-12" style={{ width: "100%", marginRight: "-20px" }}>
+        <div className="col-md-4 col-sm-12 col-12"  style={{ width: "100%", marginRight: "-20px" }}>
           <div className="box box-warning direct-chat direct-chat-warning" >
             <div className="box-header with-border">
               <h3 className="box-title">Chat Messages</h3>
             </div>
-            <div className="box-body"  style={{ overflowY: "auto", height: "calc(87vh - 120px)" }}>
-              <div className="direct-chat-messages" ref={chatMessagesRef}  style={{ minHeight: "100%", overflowY: "auto" }}>
+            <div className="box-body"  style={{ overflowY: "auto", height: "calc(85vh - 12vh)" }}>
+              <div className="direct-chat-messages" ref={chatMessagesRef} style={{ minHeight:'73vh', overflowY: "auto", scrollbarWidth:"none" }}>
                 {receivedMessages.map((data, index) => (
                   <div
                     key={index}
@@ -66,19 +66,19 @@ const ChatApp = () => {
                 ))}
               </div>
             </div>
-            <div className="box-footer" style={{ position: "fixed", top: "80vh" }}>
-              <form onSubmit={handleMessageSubmit}>
+            <div className="box-footer" style={{ bottom:"0" }}>
+              <form  onSubmit={handleMessageSubmit}>
                 <div className="input-group">
-                  <input
+                  <input 
                     type="text"
                     name="message"
                     placeholder="Type Message ..."
-                    className="form-control"
+                    className="form-control msginput"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                  />
+                  />&nbsp;&nbsp;&nbsp;
                   <span className="input-group-btn">
-                    <button type="submit" className="btn btn-warning btn-flat">Send</button>
+                    <button type="submit" className="btn btn-flat btnmsg">Send</button>
                   </span>
                 </div>
               </form>
