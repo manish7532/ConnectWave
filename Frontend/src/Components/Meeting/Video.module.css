@@ -1,0 +1,37 @@
+.meetUserVideo {
+    position: absolute;
+    bottom: 15vh;
+    height: 20vh;
+    width: auto;
+    left: 0;
+    border-radius: 20px;
+}
+.meetUserVideoname {
+    /* background-color: rgba(0, 0, 0, 0.253); */
+    width: 5vw;
+    color: rgb(183, 185, 189);
+    position: absolute;
+    bottom: 15vh;
+    left: 5vw;
+}
+.meetUserVideoname1 {
+    background-color: rgba(0, 0, 0, 0.253);
+    color: rgba(0, 0, 0, 0);
+    width: 20vw;
+    position: absolute;
+    bottom: 15vh;
+    left: 0vw;
+}
+
+
+.conferenceView {
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: center; 
+}
+
+.remoteVid {
+    width: 25vw;
+    border-radius: 10px; 
+    box-sizing: border-box; 
+}

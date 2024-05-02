@@ -19,7 +19,7 @@ function App() {
         <Route path='/register/organization' element={<Organization />} />
         <Route path='/login' element={<Login />} />
         <Route path='/dashboard' element={<Dashboard />} />
-        <Route path='/meeting' element={<Meeting />} />
+        <Route path='/meeting/:id' element={<Meeting />} />
         <Route path='/reset' element={<ForgetPassword />} />
         <Route path="/resetPass" element={<ResetPass />} />
 

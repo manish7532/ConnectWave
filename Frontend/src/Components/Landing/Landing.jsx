@@ -40,9 +40,9 @@ function Landing() {
             Improve your connections, no matter your location.
             Our work doesn&apos;t stop, neither should your communication.
           </p>
-          <div className="buttons" >
+          {/* <div className="buttons" >
             <a className="join" style={{ cursor: "pointer" }} data-bs-toggle="modal" data-bs-target="#exampleModal">Join Now</a>
-          </div>
+          </div> */}
 
           {/* Modal */}
           <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

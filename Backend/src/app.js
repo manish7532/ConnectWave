@@ -31,7 +31,64 @@ const io = new Server(server, {
 });
 
 const connectedUsers = [];
+let connections = {}
+let timeOnline = {}
 io.on('connection', (socket) => {
+
+        // -------------------------- Video ------------------------------
+
+    // socket.on("join-call", (path) => {
+    //     console.log(path)
+    //     if (connections[path] === undefined) {
+    //         connections[path] = []
+    //     }
+    //     connections[path].push(socket.id)
+    //     console.log('connections[path]-->',connections[path])
+    //     timeOnline[socket.id] = new Date();
+
+
+    //     for (let a = 0; a < connections[path].length; a++) {
+    //         io.to(connections[path][a]).emit("user-joined", socket.id, connections[path])
+    //     }
+
+    //     if (messages[path] !== undefined) {
+    //         for (let a = 0; a < messages[path].length; ++a) {
+    //             io.to(socket.id).emit("chat-message", messages[path][a]['data'],
+    //                 messages[path][a]['sender'], messages[path][a]['socket-id-sender'])
+    //         }
+    //     }
+    // })
+
+    // Inside the 'join-call' event handler
+
+    socket.on("join-call", (data) => {
+        console.log(data);
+        console.log(data[1])
+        if (connections[data[0]] === undefined) {
+            connections[data[0]] = [];
+        }
+        connections[data[0]].push({ id: socket.id, username: data[1] }); // Store both socket ID and username
+        console.log('connections[data]-->', connections[data[0]]);
+        timeOnline[socket.id] = new Date();
+
+        for (let a = 0; a < connections[data[0]].length; a++) {
+            io.to(connections[data[0]][a].id).emit("user-joined", socket.id, connections[data[0]].map(user => user.id), connections[data[0]].map(user => user.username));
+        }
+    });
+
+
+
+    socket.on("signal", (toId, message) => {
+        io.to(toId).emit("signal", socket.id, message);
+    })
+
+
+
+
+
+
+
+    // ------------------ chat , QNA, reactions
     socket.on('joined', (user) => {
         console.log(`${user} has joined`);
         if (!connectedUsers.includes(user)) {

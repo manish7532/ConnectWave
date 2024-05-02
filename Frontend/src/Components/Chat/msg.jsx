@@ -55,13 +55,13 @@ const ChatApp = () => {
                 {receivedMessages.map((data, index) => (
                   <div
                     key={index}
-                    className={`direct-chat-msg w-100 ${data.user === user.userdata.firstname ? 'left' : 'right'}`}
+                    className={`direct-chat-msg w-100 ${data.user === user.userdata.firstname + " " +user.userdata.lastname ? 'left' : 'right'}`}
                   >
-                    <div className={`direct-chat-info clearfix ${data.user === user.userdata.firstname ? 'text-end' : 'text-start'}`}>
+                    <div className={`direct-chat-info clearfix ${data.user === user.userdata.firstname + " " +user.userdata.lastname ? 'text-end' : 'text-start'}`}>
                       <span className={`direct-chat-name `}>{data.user}</span>
 
                     </div>
-                    <div className={`direct-chat-text ${data.user === user.userdata.firstname ? 'float-end' : 'float-start'}`}>{data.message}</div>
+                    <div className={`direct-chat-text ${data.user === user.userdata.firstname + " " +user.userdata.lastname ? 'float-end' : 'float-start'}`}>{data.message}</div>
                   </div>
                 ))}
               </div>
