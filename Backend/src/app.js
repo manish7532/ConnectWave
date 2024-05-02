@@ -35,7 +35,7 @@ let connections = {}
 let timeOnline = {}
 io.on('connection', (socket) => {
 
-        // -------------------------- Video ------------------------------
+    // -------------------------- Video ------------------------------
 
     // socket.on("join-call", (path) => {
     //     console.log(path)
@@ -103,14 +103,33 @@ io.on('connection', (socket) => {
     });
 
     socket.on('emoji', (emojiObject) => {
-        io.emit('sendEmoji', {emojiObject});
+        io.emit('sendEmoji', { emojiObject });
     });
 
-    socket.on('QueAns', ({user,QueAns}) => {
-        io.emit('response', {user,QueAns});
+    socket.on('QueAns', ({ user, QueAns }) => {
+        io.emit('response', { user, QueAns });
     })
 
     socket.on('disconnect', () => {
+
+        var diffTime = Math.abs(timeOnline[socket.id] - new Date())
+
+        socket.on('leave', (data) => {
+            console.log("disconnection data=========>", data)
+            const tempArr = connections[data[0]];
+            console.log(tempArr)
+            for (let a = 0; a < tempArr.length; ++a) {
+                if (tempArr[a].id === socket.id) {
+                    tempArr.splice(a, 1);
+                    connections[data[0]] = tempArr;
+                    console.log("after removing user======>", connections[data[0]])
+                    break;
+                }
+            }
+        })
+
+
+
         if (socket.user) {
             const index = connectedUsers.indexOf(socket.user);
             if (index !== -1) {
