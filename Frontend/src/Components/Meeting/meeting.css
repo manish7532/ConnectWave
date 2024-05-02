@@ -71,3 +71,18 @@ body {
 .emoji-container.hidden {
     opacity: 0;
 }
+
+
+.initials{
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    line-height: 40px;
+    border-radius: 50%;
+    background-color: #737ce2;
+    text-align: center;
+    margin-right: 13px;
+    font-weight: bold;
+    font-size: 15px;
+    color: white
+}

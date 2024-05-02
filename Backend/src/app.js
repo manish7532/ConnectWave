@@ -49,6 +49,10 @@ io.on('connection', (socket) => {
         io.emit('sendEmoji', {emojiObject});
     });
 
+    socket.on('QueAns', ({user,QueAns}) => {
+        io.emit('response', {user,QueAns});
+    })
+
     socket.on('disconnect', () => {
         if (socket.user) {
             const index = connectedUsers.indexOf(socket.user);
