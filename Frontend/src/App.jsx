@@ -6,10 +6,11 @@ import Dashboard from "./Components/Dashboard/Dashboard"
 import Meeting from "./Components/Meeting/Meeting"
 import ForgetPassword from './Components/ResetPass/ForgetPassword'
 import ResetPass from './Components/ResetPass/ResetPass'
+import Feedback from './Components/Feedback/Feedback'
+import Schedule from './Components/Schedule/Schedule'
 import { Routes, Route } from 'react-router-dom'
 
 function App() {
-
 
   return (
     <>
@@ -22,6 +23,8 @@ function App() {
         <Route path='/meeting/:id' element={<Meeting />} />
         <Route path='/reset' element={<ForgetPassword />} />
         <Route path="/resetPass" element={<ResetPass />} />
+        <Route path="/feedback" element={<Feedback />} />
+        <Route path="/schedule" element={<Schedule />} />
 
       </Routes>
     </>

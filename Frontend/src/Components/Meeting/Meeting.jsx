@@ -52,15 +52,6 @@ const Meeting = () => {
 
     let [videos, setVideos] = useState([])
 
-
-
-
-
-
-
-
-
-
     const [connectedUsers, setConnectedUsers] = useState([]);
     const [showUserList, setShowUserList] = useState(false);
     const [showChat, setShowChat] = useState(false);
@@ -120,10 +111,6 @@ const Meeting = () => {
             socket.off('userList');
         };
     }, []);
-
-
-
-
 
 
 
@@ -480,6 +467,7 @@ const Meeting = () => {
             const id = socketIdRef.current
 
             let leaveArr = [path, id]
+            socketRef.current.emit('leave', leaveArr);
             socketRef.current.emit('disconnect', () => {
                 socketRef.current.emit('leave', leaveArr);
             })

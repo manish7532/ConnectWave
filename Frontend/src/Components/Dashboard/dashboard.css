@@ -43,7 +43,7 @@ body {
     border-bottom-left-radius: 7px;
     color: white;
     height: 91.8vh;
-    display: flex;
+    /* display: flex; */
     align-items: center;
     justify-content: center;
 }
@@ -52,8 +52,15 @@ body {
 .scheduled-events {
     background-color: rgb(5, 11, 43);
 }
-
-
+.schedule_list1{
+    background-color: #4241478e !important;
+    border-radius: 10px;
+    border:1px solid rgb(212, 206, 206);
+    list-style: none;
+}
+.se{
+    color: rgb(176, 180, 190);
+}
 .modal.fade .modal-dialog {
     transform: scale(1.1);
     transition: transform 0.5s ease-out;

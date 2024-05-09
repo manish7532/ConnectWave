@@ -1,5 +1,5 @@
 import express from 'express';
-import { Mongoose, User, Organization } from './model/db.js';
+import { Mongoose, User, Organization, Event } from './model/db.js';
 import morgan from 'morgan';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
@@ -84,10 +84,6 @@ io.on('connection', (socket) => {
 
 
 
-
-
-
-
     // ------------------ chat , QNA, reactions
     socket.on('joined', (user) => {
         console.log(`${user} has joined`);
@@ -110,24 +106,22 @@ io.on('connection', (socket) => {
         io.emit('response', { user, QueAns });
     })
 
-    socket.on('disconnect', () => {
-
-        var diffTime = Math.abs(timeOnline[socket.id] - new Date())
-
-        socket.on('leave', (data) => {
-            console.log("disconnection data=========>", data)
-            const tempArr = connections[data[0]];
-            console.log(tempArr)
-            for (let a = 0; a < tempArr.length; ++a) {
-                if (tempArr[a].id === socket.id) {
-                    tempArr.splice(a, 1);
-                    connections[data[0]] = tempArr;
-                    console.log("after removing user======>", connections[data[0]])
-                    break;
-                }
+    socket.on('leave', (data) => {
+        console.log("disconnection data=========>", data)
+        const tempArr = connections[data[0]];
+        console.log(tempArr)
+        for (let a = 0; a < tempArr.length; ++a) {
+            if (tempArr[a].id === socket.id) {
+                tempArr.splice(a, 1);
+                connections[data[0]] = tempArr;
+                console.log("after removing user======>", connections[data[0]])
+                break;
             }
-        })
+        }
+    })
 
+    socket.on('disconnect', () => {
+        var diffTime = Math.abs(timeOnline[socket.id] - new Date())
 
 
         if (socket.user) {
@@ -396,5 +390,103 @@ app.post('/api/changePass', async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+
+
+// POST route to handle feedback submission
+app.post('/api/feedback', async (req, res) => {
+    const { userID, rating, audioQuality, videoQuality, suggestion } = req.body;
+
+    const audienceSatisfaction = (audioQuality + videoQuality + rating) / 3;
+
+    try {
+        const newFeedback = new Feedback({
+            userID,
+            rating,
+            audioQuality,
+            videoQuality,
+            audienceSatisfaction,
+            suggestion
+        });
+
+        await newFeedback.save();
+
+        res.status(201).json({ message: 'Feedback submitted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to submit feedback' });
+    }
+});
+
+//---------schedule a new meeting------------------------
+app.post('/api/schedule', async (req, res) => {
+    const {
+        userID,
+        meetingTitle,
+        description,
+        participants,
+        duration,
+        recordingsOption,
+        Q_AOption,
+        waitingRoomOption,
+        selectedCountryIsoCode,
+        meetingStartDate,
+        meetingStartTime,
+        meetingEndDate
+    } = req.body;
+
+    try {
+        const startDateTime = new Date(meetingStartDate);
+        const endDateTime = new Date(meetingEndDate);
+
+        const newMeeting = new Event({
+            organizerId: userID,
+            title: meetingTitle,
+            description,
+            startDate: startDateTime,
+            endDate: endDateTime,
+            duration: Number(duration),
+            time: startDateTime,
+            timeZone: Country.getCountryByCode(selectedCountryIsoCode).timezones[0].gmtOffsetName,
+            recordings: recordingsOption,
+            QnA: Q_AOption,
+            waitingRoom: waitingRoomOption,
+            participantLimit: Number(participants)
+        });
+
+        await newMeeting.save();
+
+        return res.status(201).json({ message: 'Meeting scheduled successfully', meeting: newMeeting });
+    } catch (error) {
+        console.error('Error scheduling meeting:', error);
+        return res.status(500).json({ error: 'Failed to schedule meeting' });
+    }
+});
+
+//------------show scheduled events------------
+app.get('/api/smeetings', async (req, res) => {
+    try {
+        const meetings = await Event.find();
+        return res.status(200).json({ meetings });
+    } catch (error) {
+        console.error('Error fetching meetings:', error);
+        return res.status(500).json({ error: 'Failed to fetch meetings' });
+    }
+});
+
+
+app.post('/api/deleteEvent', async (req, res) => {
+    try {
+        const id = req.body.id;
+        const deletedMeeting = await Event.deleteOne({ _id: id });
+        if (!deletedMeeting) {
+            return res.status(404).json({ message: 'Meeting not found' });
+        }
+        res.status(200).json({ message: 'Meeting deleted successfully', deletedMeeting });
+    } catch (error) {
+        console.error('Error deleting meeting:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
