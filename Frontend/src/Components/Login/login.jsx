@@ -3,7 +3,7 @@ import logo from "../images/logo nav.png";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios'
 
 function Login() {
@@ -74,7 +74,7 @@ function Login() {
                                         <div className="mb-4">
                                             <h3>Sign in</h3>
                                             <p>
-                                                {`Don't have an account?`} <a href="/register">Sign up</a>
+                                                {`Don't have an account?`} <Link to={"/register"}>Sign up</Link>
                                             </p>
                                         </div>
                                     </div>
@@ -107,7 +107,7 @@ function Login() {
                                 <div className="row">
                                     <div className="col-12">
                                         <div className="d-flex gap-2 gap-md-4 flex-column flex-md-row justify-content-md-center mt-4">
-                                            <a href="/reset">Forgot password</a>
+                                            <Link to={"/reset"}>Forgot password</Link>
                                         </div>
                                     </div>
                                 </div>
