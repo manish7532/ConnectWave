@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import socketIOClient from 'socket.io-client';
 import './msg.css';
 
-const ENDPOINT = "http://localhost:8000";
+const ENDPOINT = "https://localhost:8000";
 
 const ChatApp = () => {
   const [message, setMessage] = useState('');

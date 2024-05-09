@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './CalendarClock.css';
 
 const CalendarClock = () => {

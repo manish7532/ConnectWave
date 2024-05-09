@@ -1,5 +1,5 @@
 import express from 'express';
-import { Mongoose, User, Organization, Event } from './model/db.js';
+import { Mongoose, User, Organization, Event, Participant, Feedback } from './model/db.js';
 import morgan from 'morgan';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
@@ -10,21 +10,26 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { Server } from 'socket.io';
-import { createServer } from 'node:http';
+import { createServer } from 'node:https';
 import { Country } from 'country-state-city';
 import otpGenerator from 'otp-generator';
 import { sendEmail } from './resetPass/email.js';
+import mongoose from 'mongoose';
 dotenv.config()
 
 const app = express();
 
 //socket connection
-const server = createServer(app);
+const httpsOptions = {
+    key: fs.readFileSync('./cert.key'),
+    cert: fs.readFileSync('./cert.crt')
+};
+const server = createServer(httpsOptions, app);
 const io = new Server(server, {
     cors: {
         origin: [
-            "http://localhost:5173",
-            "http://192.168.99.186:5173",
+            "https://localhost:5173",
+            "https://192.168.137.1:5173",
         ],
         methods: ["GET", "POST"]
     }
@@ -37,42 +42,16 @@ io.on('connection', (socket) => {
 
     // -------------------------- Video ------------------------------
 
-    // socket.on("join-call", (path) => {
-    //     console.log(path)
-    //     if (connections[path] === undefined) {
-    //         connections[path] = []
-    //     }
-    //     connections[path].push(socket.id)
-    //     console.log('connections[path]-->',connections[path])
-    //     timeOnline[socket.id] = new Date();
-
-
-    //     for (let a = 0; a < connections[path].length; a++) {
-    //         io.to(connections[path][a]).emit("user-joined", socket.id, connections[path])
-    //     }
-
-    //     if (messages[path] !== undefined) {
-    //         for (let a = 0; a < messages[path].length; ++a) {
-    //             io.to(socket.id).emit("chat-message", messages[path][a]['data'],
-    //                 messages[path][a]['sender'], messages[path][a]['socket-id-sender'])
-    //         }
-    //     }
-    // })
-
-    // Inside the 'join-call' event handler
-
     socket.on("join-call", (data) => {
-        console.log(data);
-        console.log(data[1])
         if (connections[data[0]] === undefined) {
             connections[data[0]] = [];
         }
-        connections[data[0]].push({ id: socket.id, username: data[1] }); // Store both socket ID and username
-        console.log('connections[data]-->', connections[data[0]]);
+
+        connections[data[0]].push({ id: socket.id, username: data[1], userID: data[3] });
         timeOnline[socket.id] = new Date();
 
         for (let a = 0; a < connections[data[0]].length; a++) {
-            io.to(connections[data[0]][a].id).emit("user-joined", socket.id, connections[data[0]].map(user => user.id), connections[data[0]].map(user => user.username));
+            io.to(connections[data[0]][a].id).emit("user-joined", socket.id, connections[data[0]].map(user => user.id), connections[data[0]].map(user => user.username), connections[data[0]].map(user => user.userID));
         }
     });
 
@@ -81,6 +60,26 @@ io.on('connection', (socket) => {
     socket.on("signal", (toId, message) => {
         io.to(toId).emit("signal", socket.id, message);
     })
+
+
+
+    socket.on('leave', (data) => {
+        console.log("disconnection data=========>", data)
+        const tempArr = connections[data[0]];
+        console.log(tempArr)
+        for (let a = 0; a < tempArr.length; ++a) {
+            if (tempArr[a].id === socket.id) {
+                tempArr.splice(a, 1);
+                connections[data[0]] = tempArr;
+                console.log("after removing user======>", connections[data[0]])
+                break;
+            }
+        }
+    })
+
+
+
+
 
 
 
@@ -106,21 +105,11 @@ io.on('connection', (socket) => {
         io.emit('response', { user, QueAns });
     })
 
-    socket.on('leave', (data) => {
-        console.log("disconnection data=========>", data)
-        const tempArr = connections[data[0]];
-        console.log(tempArr)
-        for (let a = 0; a < tempArr.length; ++a) {
-            if (tempArr[a].id === socket.id) {
-                tempArr.splice(a, 1);
-                connections[data[0]] = tempArr;
-                console.log("after removing user======>", connections[data[0]])
-                break;
-            }
-        }
-    })
+
+
 
     socket.on('disconnect', () => {
+
         var diffTime = Math.abs(timeOnline[socket.id] - new Date())
 
 
@@ -154,7 +143,8 @@ app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+console.log(path.join(__dirname, '../uploads'))
 const PORT = process.env.PORT || 4000;
 
 server.listen(PORT, () => {
@@ -162,7 +152,7 @@ server.listen(PORT, () => {
 });
 
 
-// app.get("/", (req, res) => { res.send("hello this is node backend!!!") })
+app.get("/", (req, res) => { res.send("hello this is node backend!!!") })
 
 //register form post req
 app.post('/api/register', (req, res) => {
@@ -397,12 +387,13 @@ app.post('/api/changePass', async (req, res) => {
 
 // POST route to handle feedback submission
 app.post('/api/feedback', async (req, res) => {
-    const { userID, rating, audioQuality, videoQuality, suggestion } = req.body;
+    const { eventID, userID, rating, audioQuality, videoQuality, suggestion } = req.body;
 
     const audienceSatisfaction = (audioQuality + videoQuality + rating) / 3;
 
     try {
         const newFeedback = new Feedback({
+            eventID,
             userID,
             rating,
             audioQuality,
@@ -465,6 +456,43 @@ app.post('/api/schedule', async (req, res) => {
     }
 });
 
+
+
+
+//---------------new instant meeting---------------------
+app.post('/api/event', async (req, res) => {
+    try {
+        const d = new Date()
+        const userID = new mongoose.Types.ObjectId(req.body.userID);
+        const newEvent = new Event({ title: 'Instant Meeting', organizerId: userID, startDate: d, endDate: d, Time: d, Recordings: true, QnA: true, Feedback: true, WaitingRoom: true, timeZone: 'UTC+05:30' });
+        await newEvent.save();
+        res.status(201).json({ message: 'Event created successfully', event: newEvent });
+    } catch (error) {
+        console.log(error);
+        res.status(400).send("something went wrong")
+    }
+})
+
+
+
+
+// ---------------- get event details ----------------
+app.post('/api/getEvent', async (req, res) => {
+    try {
+        const roomID = new mongoose.Types.ObjectId(req.body.roomID)
+        const event = await Event.findOne({ _id: roomID })
+        if (event) {
+            res.status(201).json({ message: 'Event Found', event: event });
+        }
+        else {
+            res.status(404).json({ message: 'Event not found' });
+        }
+    } catch (error) {
+        res.status(400).json("something went wrong")
+    }
+})
+
+
 //------------show scheduled events------------
 app.get('/api/smeetings', async (req, res) => {
     try {
@@ -476,7 +504,7 @@ app.get('/api/smeetings', async (req, res) => {
     }
 });
 
-
+// --------------------delete Event--------------
 app.post('/api/deleteEvent', async (req, res) => {
     try {
         const id = req.body.id;
@@ -490,3 +518,45 @@ app.post('/api/deleteEvent', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+
+
+
+//---------------- saving evnt participants ------------------------
+app.post('/api/participants', async (req, res) => {
+    try {
+        const d = new Date()
+        const data = [req.body.userID, req.body.eventID, req.body.role]
+        if (data) {
+            console.log(data);
+            console.log('user & event ids ======>', data[0], '  ', data[1]);
+            const user = await User.findOne({ _id: data[0] });
+            console.log('user found ====>', user);
+            const event = await Event.findOne({ _id: data[1] });
+            console.log('event found ====>', event);
+            const participant = await Participant.findOne({ userID: data[0], eventID: data[1] });
+            if (participant) {
+                const tempArray = participant.joinedAt;
+                participant = {
+                    joinedAt: [...tempArray, d],
+                }
+                await participant.save();
+            }
+            else {
+                const participant = new Participant({
+                    userID: data[0],
+                    eventID: data[1],
+                    joinedAt: [d],
+                    role: data[2] ? 'host' : 'participant'
+                })
+                await participant.save();
+                console.log("Participant Data ==========> ", participant);
+            }
+            // await participant.save();
+            res.send("Everything OK! 👍")
+        }
+    } catch (error) {
+        res.status(404).send({ message: 'somethihng went wrong' });
+        console.log(error)
+    }
+})

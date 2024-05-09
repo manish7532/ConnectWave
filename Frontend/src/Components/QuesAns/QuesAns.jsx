@@ -3,7 +3,7 @@ import socketIOClient from 'socket.io-client';
 import './QuesAns.css';
 
 // const ENDPOINT = "http://192.168.1.105:8000";
-const ENDPOINT = "http://localhost:8000";
+const ENDPOINT = "https://localhost:8000";
 
 const QuesAns = () => {
     const [QueAns, setQueAns] = useState('');

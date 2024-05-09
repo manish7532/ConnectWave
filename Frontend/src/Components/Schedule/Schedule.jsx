@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import logoimg from "../images/logo nav.png"
@@ -6,7 +6,6 @@ import './Schedule.css';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom'
 import { Country } from 'country-state-city';
-import { DateTime } from 'luxon';
 import axios from 'axios';
 
 const ScheduleMeetingForm = () => {
@@ -85,7 +84,7 @@ const ScheduleMeetingForm = () => {
             return;
         }
 
-            
+
         const startDateTime = new Date(meetingStartDate);
         startDateTime.setHours(meetingStartTime.getHours());
         startDateTime.setMinutes(meetingStartTime.getMinutes());
@@ -134,8 +133,11 @@ const ScheduleMeetingForm = () => {
 
     };
 
+
+    const imgurl = `https://localhost:8000/uploads/${user.userdata._id}/${user.userdata.profilePhoto}`
     return (
         <>
+
             <nav className="navbar navbar-expand-lg text-light dnav" style={{ backgroundColor: "#001247" }} data-bs-theme="dark">
                 <div className="container-fluid">
                     <div className="d-flex align-items-center">
@@ -163,18 +165,20 @@ const ScheduleMeetingForm = () => {
                                     <i className="bi bi-house"></i>&nbsp;Home
                                 </Link>
                             </li>
-                            <li className="nav-item">
-                                <a className="nav-link">
-                                    <i className="bi bi-camera-video"></i>&nbsp;Meetings
-                                </a>
-                            </li>
+                            {/* <li className="nav-item">
+                <a className="nav-link">
+                  <i className="bi bi-camera-video"></i>&nbsp;Meetings
+                </a>
+              </li> */}
 
                             <li className="nav-item dropdown">
                                 <a data-bs-toggle="dropdown" className="nav-icon nav-link pe-md-0">
-                                    {user && user.userdata.firstname}
+                                    {user.userdata.profilePhoto ? <img src={imgurl} alt="" style={{ borderRadius: '50%', height: '4vh' }} /> :
+                                        <i className="fa-regular fa-user"></i>}&nbsp;{user && user.userdata.firstname}
                                 </a>
                                 <div className="dropdown-menu dropdown-menu-end">
-                                    <a className="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal">
+                                    {/* <a className="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal"> */}
+                                    <a className="dropdown-item" data-bs-toggle="offcanvas" data-bs-target="#profileCanvas" aria-controls="offcanvasRight">
                                         Profile
                                     </a>
                                     <a className="dropdown-item">
@@ -279,7 +283,7 @@ const ScheduleMeetingForm = () => {
                         </div>
                         <div className="col">
                             <label htmlFor="duration" className="form-label schedule_label">Duration (minutes):</label>
-                            <input type="number" min={1} className="finout" id="duration" name="duration" value={duration} onChange={handleInputChange} required />
+                            <input type="number" min={5} className="finout" id="duration" name="duration" value={duration} onChange={handleInputChange} required />
                         </div>
                     </div>
 

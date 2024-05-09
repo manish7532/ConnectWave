@@ -16,7 +16,7 @@ function Login() {
     async function submitHandler(e) {
         e.preventDefault();
         try {
-            const res = await axios.post("http://localhost:8000/api/login", data);
+            const res = await axios.post("https://localhost:8000/api/login", data);
             if (res.status === 200) {
                 toast.success("Login successful", {
                     position: "top-center"

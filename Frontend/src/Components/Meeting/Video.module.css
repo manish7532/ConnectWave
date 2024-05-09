@@ -28,10 +28,16 @@
     display: flex;
     flex-wrap: wrap; 
     justify-content: center; 
+    align-items: center;
 }
 
 .remoteVid {
     width: 25vw;
+    border-radius: 10px; 
+    box-sizing: border-box; 
+}
+.hostvideo {
+    width: 48vw;
     border-radius: 10px; 
     box-sizing: border-box; 
 }

@@ -3,27 +3,53 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import './dashboard.css';
 import logo from '../images/logo nav.png';
-import { v4 as uuid } from 'uuid'
 import { DateTime } from 'luxon';
 import copy from 'clipboard-copy';
 import CalendarClock from './CalendarClock';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 function Dashboard() {
   const [scheduledMeetings, setScheduledMeetings] = useState([]);
   const [roomID, setRoomID] = useState();
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
+
+
+  const handleJoinMeeting = async () => {
+    document.getElementById('modalcls').click()
+    try {
+      const response = await axios.post('https://localhost:8000/api/getEvent', { roomID: roomID })
+      if (response.status == 201) {
+        navigate('/meeting/' + roomID, { state: { roomID: roomID, event: response.data.event } });
+      }
+      else {
+        toast.error('Event Not Found', {
+          position: "top-center"
+        });
+      }
+      setRoomID();
+    } catch (error) {
+      toast.error('Event Not Found', {
+        position: "top-center"
+      });
+      setRoomID('');
+    }
+  };
+
+
+
   const fetchScheduledMeetings = async () => {
     try {
       if (!user) return;
       // const response = await axios.get('http://192.168.151.45:8000/api/smeetings',
-      const response = await axios.get('http://localhost:8000/api/smeetings',
-      
-       {
-        params: {
-          organizerId: user.userdata._id
-        }
-      });
+      const response = await axios.get('https://localhost:8000/api/smeetings',
+
+        {
+          params: {
+            organizerId: user.userdata._id
+          }
+        });
       setScheduledMeetings(response.data.meetings);
     } catch (error) {
       console.error('Error fetching meetings:', error);
@@ -105,7 +131,7 @@ function Dashboard() {
   //------------log out------------------------
   async function handleLogout() {
     try {
-      const response = await axios.get('http://localhost:8000/api/logout');
+      const response = await axios.get('https://localhost:8000/api/logout');
       console.log('Logged out successfully');
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -124,7 +150,7 @@ function Dashboard() {
         return;
       }
 
-      const response = await axios.get('http://localhost:8000/api/verify', {
+      const response = await axios.get('https://localhost:8000/api/verify', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -152,20 +178,25 @@ function Dashboard() {
 
   // -------------------------------new Meeting-----------------------------------
 
-  const handleNewMeeting = () => {
-    const newRoomId = uuid();
-    navigate('/meeting/' + newRoomId);
+  const handleNewMeeting = async () => {
+    try {
+      const response = await axios.post('https://localhost:8000/api/event', { userID: user.userdata._id })
+      navigate('/meeting/' + response.data.event._id, { state: { roomID: response.data.event._id, event: response.data.event } });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  const handleJoinMeeting = () => {
-    document.getElementById('modalcls').click()
-    navigate('/meeting/' + roomID);
-  };
 
 
   // ---------start scheduled meeting-----------------
-  const handleStartMeeting = (id) => {
-    navigate('/meeting/' + id);
+  const handleStartMeeting = async (id) => {
+    try {
+      const response = await axios.post('https://localhost:8000/api/getEvent', { roomID: id })
+      navigate('/meeting/' + id, { state: { roomID: id, event: response.data.event } });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   // ---------------------copy meeting link--------------------------
@@ -181,13 +212,18 @@ function Dashboard() {
   //----------------------delete event---------------------
   const handleDeleteEvent = async (id) => {
     try {
-      const response = await axios.post('http://localhost:8000/api/deleteEvent', { id });
+      const response = await axios.post('https://localhost:8000/api/deleteEvent', { id });
       console.log('Event deleted successfully:', response.data);
       setScheduledMeetings((prevMeetings) => prevMeetings.filter((meeting) => meeting._id !== id));
     } catch (error) {
       console.error('Error deleting event:', error);
     }
   };
+
+
+
+  const imgurl = `https://localhost:8000/uploads/${user.userdata._id}/${user.userdata.profilePhoto}`
+
 
   return (
     <>
@@ -213,23 +249,25 @@ function Dashboard() {
 
           <div className="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
             <ul className="navbar-nav mb-2 mb-lg-0">
-              <li className="nav-item">
-                <a className="nav-link" aria-current="page">
+              {/* <li className="nav-item">
+                <Link to={'/dashboard'} className="nav-link" aria-current="page">
                   <i className="bi bi-house"></i>&nbsp;Home
-                </a>
-              </li>
-              <li className="nav-item">
+                </Link>
+              </li> */}
+              {/* <li className="nav-item">
                 <a className="nav-link">
                   <i className="bi bi-camera-video"></i>&nbsp;Meetings
                 </a>
-              </li>
+              </li> */}
 
               <li className="nav-item dropdown">
                 <a data-bs-toggle="dropdown" className="nav-icon nav-link pe-md-0">
-                  {user && user.userdata.firstname}
+                  {user.userdata.profilePhoto ? <img src={imgurl} alt="" style={{ borderRadius: '50%', height: '4vh' }} /> :
+                    <i className="fa-regular fa-user"></i>}&nbsp;{user && user.userdata.firstname}
                 </a>
                 <div className="dropdown-menu dropdown-menu-end">
-                  <a className="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal">
+                  {/* <a className="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal"> */}
+                  <a className="dropdown-item" data-bs-toggle="offcanvas" data-bs-target="#profileCanvas" aria-controls="offcanvasRight">
                     Profile
                   </a>
                   <a className="dropdown-item">
@@ -274,7 +312,6 @@ function Dashboard() {
                             <label htmlFor="meetingId" className="mLabel">Meeting ID</label>
                             <input type="text" value={roomID} onChange={e => setRoomID(e.target.value)} className="form-control mdalInp" id="meetingId" placeholder="Enter Meeting ID" />
                           </div>
-
                         </form>
                       </div>
                       <div className="modal-footer">
@@ -344,6 +381,23 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+
+
+      {/* ----------------------profile canvas----------------------------- */}
+      <div className="offcanvas offcanvas-end" data-bs-theme='dark' tabIndex="-1" id="profileCanvas">
+        <div className="offcanvas-header">
+          <h5 className="offcanvas-title" id="offcanvasRightLabel">Offcanvas right</h5>
+          <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div className="offcanvas-body">
+          ...
+        </div>
+      </div>
+
+
+      <ToastContainer />
+
     </>
   );
 }

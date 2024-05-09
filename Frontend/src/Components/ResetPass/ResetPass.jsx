@@ -16,7 +16,7 @@ function ResetPass() {
         e.preventDefault();
         try {
             if (newPassword == confirmPassword && otp.otp == userOtp) {
-                const response = await axios.post('http://localhost:3000/api/changePass', {
+                const response = await axios.post('https://localhost:3000/api/changePass', {
                     email,
                     newPassword,
                 });

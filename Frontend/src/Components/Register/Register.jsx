@@ -63,7 +63,7 @@ function Register() {
 
     try {
       if (data.password === data.confirmPassword) {
-        const response = await axios.post('http://localhost:8000/api/register', formData, {
+        const response = await axios.post('https://localhost:8000/api/register', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './Feedback.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import logoimg from '../images/logo nav.png'
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 const Feedback = () => {
+
+    let params = new URLSearchParams(window.location.search);
+    let roomID = params.get('roomID');
     const [selectedRatings, setSelectedRatings] = useState(null);
     const [selected_ARatings, setSelected_ARatings] = useState(null);
     const [selected_VRatings, setSelected_VRatings] = useState(null);
@@ -34,7 +37,8 @@ const Feedback = () => {
         event.preventDefault();
         try {
             console.log(user.userdata._id)
-            const response = await axios.post('http://localhost:8000/api/feedback', {
+            const response = await axios.post('https://localhost:8000/api/feedback', {
+                eventID: roomID,
                 userID: user.userdata._id,
                 rating: selectedRatings,
                 audioQuality: selected_ARatings,
@@ -55,7 +59,7 @@ const Feedback = () => {
 
     async function handleLogout() {
         try {
-            const response = await axios.get('http://localhost:8000/api/logout');
+            const response = await axios.get('https://localhost:8000/api/logout');
             console.log('Logged out successfully');
             localStorage.removeItem("token");
             localStorage.removeItem("user");
@@ -64,6 +68,8 @@ const Feedback = () => {
             console.error('Logout error:', error);
         }
     }
+
+    const imgurl = `https://localhost:8000/uploads/${user.userdata._id}/${user.userdata.profilePhoto}`
     return (
         <>
             <nav className="navbar navbar-expand-lg text-light dnav" style={{ backgroundColor: "#001247" }} data-bs-theme="dark">
@@ -93,18 +99,20 @@ const Feedback = () => {
                                     <i className="bi bi-house"></i>&nbsp;Home
                                 </Link>
                             </li>
-                            <li className="nav-item">
-                                <a className="nav-link">
-                                    <i className="bi bi-camera-video"></i>&nbsp;Meetings
-                                </a>
-                            </li>
+                            {/* <li className="nav-item">
+                <a className="nav-link">
+                  <i className="bi bi-camera-video"></i>&nbsp;Meetings
+                </a>
+              </li> */}
 
                             <li className="nav-item dropdown">
                                 <a data-bs-toggle="dropdown" className="nav-icon nav-link pe-md-0">
-                                    {user && user.userdata.firstname}
+                                    {user.userdata.profilePhoto ? <img src={imgurl} alt="" style={{ borderRadius: '50%', height: '4vh' }} /> :
+                                        <i className="fa-regular fa-user"></i>}&nbsp;{user && user.userdata.firstname}
                                 </a>
                                 <div className="dropdown-menu dropdown-menu-end">
-                                    <a className="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal">
+                                    {/* <a className="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal"> */}
+                                    <a className="dropdown-item" data-bs-toggle="offcanvas" data-bs-target="#profileCanvas" aria-controls="offcanvasRight">
                                         Profile
                                     </a>
                                     <a className="dropdown-item">

@@ -1,13 +1,16 @@
-import  { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './meeting.css';
 import socketIOClient from 'socket.io-client';
 import ChatApp from '../Chat/msg';
 import QuesAns from '../QuesAns/QuesAns';
 import EmojiPicker from 'emoji-picker-react';
 import styles from './Video.module.css'
+import { useLocation } from 'react-router-dom';
+import logoimg from '../images/logo nav.png'
+import axios from 'axios';
 
-const socket = socketIOClient('http://localhost:8000');
-// const socket = socketIOClient('http://192.168.1.105:8000');
+const socket = socketIOClient('https://localhost:8000');
+// const socket = socketIOClient('https://192.168.1.103:8000'); 
 const peerConfigConnections = {
     "iceServers": [
         { "urls": "stun:stun.l.google.com:19302" }
@@ -19,38 +22,29 @@ var connections = {};
 const Meeting = () => {
 
     const user = JSON.parse(localStorage.getItem("user"));
+    const { state } = useLocation();
+    const roomID = state.roomID;
+    const newEvent = state.event;
     var socketRef = useRef();
     let socketIdRef = useRef();
-
     let localVideoref = useRef();
-
     let [videoAvailable, setVideoAvailable] = useState(true);
-
     let [audioAvailable, setAudioAvailable] = useState(true);
-
     let [video, setVideo] = useState([]);
-
     let [audio, setAudio] = useState();
-
     let [screen, setScreen] = useState();
-
-    let [showModal, setModal] = useState(true);
-
     let [screenAvailable, setScreenAvailable] = useState();
-
-    let [messages, setMessages] = useState([])
-
-    let [message, setMessage] = useState("");
-
-    let [newMessages, setNewMessages] = useState(3);
-
     let [askForUsername, setAskForUsername] = useState(true);
-
     let [username, setUsername] = useState("");
-
     const videoRef = useRef([])
-
     let [videos, setVideos] = useState([])
+
+
+    // screen recording
+    const [isRecording, setIsRecording] = useState(false);
+    const [mediaRecorderInstance, setMediaRecorderInstance] = useState(null);
+
+
 
     const [connectedUsers, setConnectedUsers] = useState([]);
     const [showUserList, setShowUserList] = useState(false);
@@ -113,14 +107,12 @@ const Meeting = () => {
     }, []);
 
 
-
     // ------------------------------------  video -------------------------------------
 
     useEffect(() => {
         console.log("HELLO")
         getPermissions();
-
-    })
+    }, [])
 
     let getDislayMedia = () => {
         if (screen) {
@@ -176,7 +168,7 @@ const Meeting = () => {
     useEffect(() => {
         if (video !== undefined && audio !== undefined) {
             getUserMedia();
-            console.log("SET STATE HAS ", video, audio);
+            console.log("SET STATE HAS ", "Video==>", video, ' Audio==>', audio);
 
         }
     }, [video, audio])
@@ -250,7 +242,7 @@ const Meeting = () => {
                 .catch((e) => console.log(e))
         } else {
             try {
-                let tracks = localVideoref.current.srcObject.getTracks()
+                let tracks = localVideoref.current.srcObject.getTracks();
                 tracks.forEach(track => track.stop())
             } catch (e) { }
         }
@@ -323,15 +315,31 @@ const Meeting = () => {
     }
 
 
+    // let roledecider = async (roomID) => {
+    //     const response = await axios.post('https://localhost:8000/api/getEvent', { roomID: roomID });
+    //     setEvent(response.data.event)
+    // }
 
-    let connectToSocketServer = () => {
-        socketRef.current = socketIOClient.connect('http://localhost:8000', { secure: false })
 
-        socketRef.current.on('signal', gotMessageFromServer)
+
+    let connectToSocketServer = async () => {
+        try {
+            const userID = user.userdata._id;
+            const eventID = newEvent._id;
+            const role = newEvent.userID === user.userdata._id;
+            const response = await axios.post('https://localhost:8000/api/participants', { userID, eventID, role });
+        } catch (error) {
+            console.log(error);
+        }
+        socketRef.current = socketIOClient.connect('https://localhost:8000');
+
+        socketRef.current.on('signal', gotMessageFromServer);
 
         const path = window.location.href;
         const username = user.userdata.firstname + " " + user.userdata.lastname
-        let data = [path, username]
+        const userID = user.userdata._id;
+        let data = [path, username, roomID, userID]
+
         socketRef.current.on('connect', () => {
             socketRef.current.emit('join-call', data)
             socketIdRef.current = socketRef.current.id
@@ -341,9 +349,8 @@ const Meeting = () => {
                 setVideos((videos) => videos.filter((video) => video.socketId !== id))
             })
 
+            socketRef.current.on('user-joined', (id, clients, usernames, userIDs) => {
 
-            socketRef.current.on('user-joined', (id, clients, usernames) => {
-                console.log(usernames)
                 clients.forEach((socketListId, index) => {
                     connections[socketListId] = new RTCPeerConnection(peerConfigConnections);
 
@@ -367,7 +374,7 @@ const Meeting = () => {
                             // Update the stream of the existing video
                             setVideos(videos => {
                                 const updatedVideos = videos.map(video =>
-                                    video.socketId === socketListId ? { ...video, stream: event.stream, username: usernames[index] } : video
+                                    video.socketId === socketListId ? { ...video, stream: event.stream, username: usernames[index], userID: userIDs[index] } : video
                                 );
                                 videoRef.current = updatedVideos;
                                 return updatedVideos;
@@ -379,6 +386,7 @@ const Meeting = () => {
                                 socketId: socketListId,
                                 stream: event.stream,
                                 username: usernames[index], // Include username
+                                userID: userIDs[index], // Include userID
                                 autoplay: true,
                                 playsinline: true
                             };
@@ -401,12 +409,6 @@ const Meeting = () => {
                     }
                 });
 
-
-
-
-
-
-
                 if (id === socketIdRef.current) {
                     for (let id2 in connections) {
                         if (id2 === socketIdRef.current) continue
@@ -424,7 +426,8 @@ const Meeting = () => {
                         })
                     }
                 }
-            })
+            });
+
         })
     }
 
@@ -445,11 +448,9 @@ const Meeting = () => {
 
     let handleVideo = () => {
         setVideo(!video);
-        getUserMedia();
     }
     let handleAudio = () => {
         setAudio(!audio)
-        getUserMedia();
     }
 
     useEffect(() => {
@@ -465,17 +466,16 @@ const Meeting = () => {
         try {
             const path = window.location.href;
             const id = socketIdRef.current
-
             let leaveArr = [path, id]
             socketRef.current.emit('leave', leaveArr);
-            socketRef.current.emit('disconnect', () => {
+            socketRef.current.emit('disconnect', (leaveArr) => {
                 socketRef.current.emit('leave', leaveArr);
             })
 
             let tracks = localVideoref.current.srcObject.getTracks()
             tracks.forEach(track => track.stop())
         } catch (e) { }
-        window.location.href = "/dashboard"
+        window.location.href = `/feedback/?roomID=${roomID}`
     }
 
 
@@ -487,6 +487,68 @@ const Meeting = () => {
 
 
 
+
+
+
+
+    //--------------------- recording----------------------
+    const startScreenRecording = async () => {
+        try {
+            // Get user consent to record screen
+            const newstream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+
+            // Create a MediaRecorder instance
+            const mediaRecorder = new MediaRecorder(newstream);
+
+            // Array to store recorded chunks
+            const recordedChunks = [];
+
+            // Event handler for dataavailable event
+            mediaRecorder.ondataavailable = (event) => {
+                recordedChunks.push(event.data);
+            };
+
+            // Event handler for stop event
+            mediaRecorder.onstop = () => {
+                // Combine recorded chunks into a single Blob
+                const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+
+                // Create a download link for the recorded video
+                const downloadLink = document.createElement('a');
+                downloadLink.href = URL.createObjectURL(recordedBlob);
+                downloadLink.download = 'recorded-screen.webm';
+                downloadLink.click();
+            };
+
+            // Start recording
+            mediaRecorder.start();
+
+            // Update state
+            setIsRecording(true);
+            setMediaRecorderInstance(mediaRecorder);
+        } catch (error) {
+            console.error('Error starting screen recording:', error);
+        }
+    };
+
+    // Stop screen recording function
+    const stopScreenRecording = () => {
+        if (mediaRecorderInstance && mediaRecorderInstance.state !== 'inactive') {
+
+            mediaRecorderInstance.stop();
+            setIsRecording(false);
+        }
+    };
+
+    // Event handler for starting recording
+    const handleStartRecording = () => {
+        startScreenRecording();
+    };
+
+    // Event handler for stopping recording
+    const handleStopRecording = () => {
+        stopScreenRecording();
+    };
 
 
 
@@ -520,26 +582,37 @@ const Meeting = () => {
                     <div className='row m-0 d-flex meetingdiv' style={{ height: '87vh', backgroundColor: "black" }}>
                         <div className="col-md-9 my-auto">
 
-
-
                             <video id='localvideo' className={styles.meetUserVideo} ref={localVideoref} autoPlay muted></video>
                             <span className={styles.meetUserVideoname1}>a</span>
                             <span className={styles.meetUserVideoname}>Me</span>
 
-                            <div className=' d-flex gap-2 justify-content-center'>
-                                {/* {console.log(videos)} */}
+                            <div className={styles.conferenceView}>
                                 {videos.map((video) => (
 
-                                    <div key={video.socketId} ><video muted className={styles.remoteVid}
-                                        data-socket={video.socketId}
-                                        ref={ref => {
-                                            if (ref && video.stream) {
-                                                ref.srcObject = video.stream;
-                                            }
-                                        }}
-                                        autoPlay
-                                    ><span >{video.username}</span>
-                                    </video>
+                                    <div key={video.socketId} >
+
+                                        {newEvent.organizerId === video.userID ? <video className={styles.hostvideo}
+                                            data-socket={video.socketId}
+                                            ref={ref => {
+                                                if (ref && video.stream) {
+                                                    ref.srcObject = video.stream;
+                                                }
+                                            }}
+                                            autoPlay
+                                        >
+                                        </video>
+                                            :
+                                            <video className={styles.remoteVid}
+                                                data-socket={video.socketId}
+                                                ref={ref => {
+                                                    if (ref && video.stream) {
+                                                        ref.srcObject = video.stream;
+                                                    }
+                                                }}
+                                                autoPlay muted
+                                            ><span >{video.username}</span>
+                                            </video>
+                                        }
                                         <p className='text-center'>{video.username}</p>
                                     </div>
 
@@ -587,7 +660,7 @@ const Meeting = () => {
                                             const firstName = names[0];
                                             const lastName = names.length > 1 ? names[names.length - 1] : '';
 
-                                            const initials = `${firstName.charAt(0).toUpperCase()}${lastName.charAt(0).toUpperCase()}`;
+                                            const initials = `${firstName.charAt(0).toUpperCase()}${lastName.charAt(0).toUpperCase()} `;
 
                                             return (
                                                 <li key={index}>
@@ -610,23 +683,30 @@ const Meeting = () => {
                         <div className="col-lg-2 col-md-2 col-sm-0"></div>
                         <div className="col-lg-8 col-md-8 col-sm-12 d-flex gap-2 justify-content-center">
                             <div className="button-container" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
-                                <a className="btn text-light mb-1">
-                                    <img src="./logo nav.png" height="30vh" /><br />
+                                <a className="btn av text-light mb-1 justify-content-start">
+                                    <img src={logoimg} height="30vh" /><br />
                                     <span style={{ fontSize: '1.5vh' }}>ConnectWave</span>
                                 </a>
-                                <a className="btn text-light av" onClick={handleAudio} type="button">
-                                    <i className="fas fa-microphone-slash"></i><br />
-                                    <span style={{ fontSize: '1.5vh' }}>{audio === true ? 'Mute' : 'Unmute'}</span>
-                                </a>
+                                {newEvent.organizerId === user.userdata._id ?
+                                    <a className="btn text-light av" onClick={handleAudio} type="button">
+                                        {audio === true ? <i className="fas fa-microphone"></i> :
+                                            <i className="fa-solid fa-microphone-slash"></i>}
+
+                                        <br />
+                                        <span style={{ fontSize: '1.5vh' }}>{audio === true ? 'Mute' : 'Unmute'}</span>
+                                    </a>
+                                    : <></>
+                                }
                                 <a className="btn text-light av" onClick={handleVideo} type="button">
-                                    <i className="fas fa-video-slash"></i><br />
+                                    {video ? <i className="fas fa-video"></i> : <i className="fas fa-video-slash"></i>}<br />
                                     <span style={{ fontSize: '1.5vh' }}>Video</span>
                                 </a>
                                 <a className="btn text-light av" type="button" onClick={toggleUserList}>
                                     <i className="fa-solid fa-users"></i><br />
                                     <span style={{ fontSize: '1.5vh' }}>Participants</span>
                                 </a>
-                                {screenAvailable === true ?
+
+                                {newEvent.organizerId === user.userdata._id && screenAvailable === true ?
                                     <a className="btn text-light av" onClick={handleScreen} type="button">
                                         <i className="bi bi-arrow-up-square-fill"></i><br />
                                         <span style={{ fontSize: '1.5vh' }}>Screen Sharing</span>
@@ -637,10 +717,14 @@ const Meeting = () => {
                                     <i className="fa-solid fa-message" ></i><br />
                                     <span style={{ fontSize: '1.5vh' }}>Chat</span>
                                 </a>
-                                <a className="btn text-light av" type="button">
-                                    <i className="bi bi-record-circle"></i><br />
-                                    <span style={{ fontSize: '1.5vh' }}>Record</span>
-                                </a>
+                                {newEvent.organizerId === user.userdata._id ?
+                                    <a className="btn text-light av" type="button" onClick={isRecording ? handleStopRecording : handleStartRecording}>
+                                        <i className="bi bi-record-circle"></i><br />
+                                        {isRecording ? <span style={{ fontSize: '1.5vh' }}>Stop Recording</span> : <span style={{ fontSize: '1.5vh' }}>Record</span>}
+                                    </a>
+                                    : <>
+                                    </>
+                                }
                                 <a className="btn text-light av" type="button" onClick={toggleEmojiPicker} >
                                     <i className="fas fa-face-smile"></i><br />
                                     <span style={{ fontSize: '1.5vh' }}>Reactions</span>
