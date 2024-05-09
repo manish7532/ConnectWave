@@ -77,9 +77,9 @@ const recordingSchema = new Schema({
 const feedbackSchema = new Schema({
     userID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     eventID: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
-    rating: { type: Number },
-    audioQuality: { type: Number },
-    videoQuality: { type: Number },
+    rating: { type: Number, required: true },
+    audioQuality: { type: Number, required: true },
+    videoQuality: { type: Number, required: true },
     audienceSatisfaction: { type: Number },
     suggestion: { type: String }
 });

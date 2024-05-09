@@ -4,7 +4,6 @@ body {
 
 .leave {
     position: fixed;
-    /* Initially position at the bottom */
     bottom: 20px;
     right: 20px;
     background-color: #DC3545;
@@ -42,7 +41,6 @@ body {
     .button-container {
         max-width: 100%;
         overflow-x: auto;
-        /* Enable horizontal scrolling */
         white-space: nowrap;
     }
 
@@ -72,6 +70,10 @@ body {
     opacity: 0;
 }
 
+.localvid{
+    width: auto;
+    height: 60vh;
+}
 
 .initials{
     display: inline-block;

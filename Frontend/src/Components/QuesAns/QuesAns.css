@@ -38,6 +38,10 @@ body{
     bottom: 0;
 }
 
+.QAbtn{
+	background-color: transparent !important;
+}
+
 
 @media (max-width:767.98px) {
 

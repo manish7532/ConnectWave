@@ -4,6 +4,8 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import logoimg from '../images/logo nav.png'
 import { useNavigate } from 'react-router-dom'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Feedback = () => {
 
@@ -36,7 +38,7 @@ const Feedback = () => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
-            console.log(user.userdata._id)
+            // console.log(user.userdata._id)
             const response = await axios.post('https://localhost:8000/api/feedback', {
                 eventID: roomID,
                 userID: user.userdata._id,
@@ -46,15 +48,22 @@ const Feedback = () => {
                 suggestion: suggestion
             });
             console.log(response.data);
-            setSelectedRatings([]);
-            setSelected_ARatings([]);
-            setSelected_VRatings([]);
-            setSuggestion('');
-
+            if (response.data.status === 201) {
+                setSelectedRatings([]);
+                setSelected_ARatings([]);
+                setSelected_VRatings([]);
+                setSuggestion('');
+                navigate('/dashboard')
+            }
+            else {
+                toast.error(response.data.message, { position: 'top-center' })
+            }
 
         } catch (error) {
             console.error('Failed to submit feedback:', error);
+            toast.error('Ratings are required', { position: 'top-center' })
         }
+
     };
 
     async function handleLogout() {
@@ -111,7 +120,6 @@ const Feedback = () => {
                                         <i className="fa-regular fa-user"></i>}&nbsp;{user && user.userdata.firstname}
                                 </a>
                                 <div className="dropdown-menu dropdown-menu-end">
-                                    {/* <a className="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal"> */}
                                     <a className="dropdown-item" data-bs-toggle="offcanvas" data-bs-target="#profileCanvas" aria-controls="offcanvasRight">
                                         Profile
                                     </a>
@@ -191,6 +199,7 @@ const Feedback = () => {
                     </form>
                 </div>
             </div>
+            <ToastContainer/>
         </>
     );
 };

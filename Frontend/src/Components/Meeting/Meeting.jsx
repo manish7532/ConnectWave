@@ -9,7 +9,7 @@ import { useLocation } from 'react-router-dom';
 import logoimg from '../images/logo nav.png'
 import axios from 'axios';
 
-const socket = socketIOClient('https://localhost:8000');
+const socket = socketIOClient.connect('https://localhost:8000');
 // const socket = socketIOClient('https://192.168.1.103:8000'); 
 const peerConfigConnections = {
     "iceServers": [
@@ -43,8 +43,6 @@ const Meeting = () => {
     // screen recording
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorderInstance, setMediaRecorderInstance] = useState(null);
-
-
 
     const [connectedUsers, setConnectedUsers] = useState([]);
     const [showUserList, setShowUserList] = useState(false);
@@ -80,6 +78,7 @@ const Meeting = () => {
         setShowUserList(false);
         setShowEmojiPicker(false);
     };
+
     const handleEmojiClick = (emojiObject) => {
         socket.emit('emoji', emojiObject.emoji);
         setShowEmojiPicker(false);
@@ -94,7 +93,6 @@ const Meeting = () => {
         });
 
         socket.on('sendEmoji', (emojiObject) => {
-            // console.log("Received emoji on client:", emojiObject);
             setReceivedEmoji(emojiObject);
             setTimeout(() => {
                 setReceivedEmoji(null);
@@ -106,11 +104,9 @@ const Meeting = () => {
         };
     }, []);
 
-
     // ------------------------------------  video -------------------------------------
-
     useEffect(() => {
-        console.log("HELLO")
+        // console.log("HELLO")
         getPermissions();
     }, [])
 
@@ -173,16 +169,12 @@ const Meeting = () => {
         }
     }, [video, audio])
 
-
     let getMedia = () => {
         setVideo(videoAvailable);
         setAudio(audioAvailable);
         connectToSocketServer();
 
     }
-
-
-
 
     let getUserMediaSuccess = (stream) => {
         try {
@@ -248,10 +240,6 @@ const Meeting = () => {
         }
     }
 
-
-
-
-
     let getDislayMediaSuccess = (stream) => {
         console.log("HERE")
         try {
@@ -313,14 +301,6 @@ const Meeting = () => {
             }
         }
     }
-
-
-    // let roledecider = async (roomID) => {
-    //     const response = await axios.post('https://localhost:8000/api/getEvent', { roomID: roomID });
-    //     setEvent(response.data.event)
-    // }
-
-
 
     let connectToSocketServer = async () => {
         try {
@@ -478,52 +458,35 @@ const Meeting = () => {
         window.location.href = `/feedback/?roomID=${roomID}`
     }
 
-
-
     let connect = () => {
         setAskForUsername(false);
         getMedia();
     }
 
-
-
-
-
-
-
     //--------------------- recording----------------------
     const startScreenRecording = async () => {
         try {
-            // Get user consent to record screen
             const newstream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
 
-            // Create a MediaRecorder instance
             const mediaRecorder = new MediaRecorder(newstream);
 
-            // Array to store recorded chunks
             const recordedChunks = [];
 
-            // Event handler for dataavailable event
             mediaRecorder.ondataavailable = (event) => {
                 recordedChunks.push(event.data);
             };
 
-            // Event handler for stop event
             mediaRecorder.onstop = () => {
-                // Combine recorded chunks into a single Blob
                 const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
 
-                // Create a download link for the recorded video
                 const downloadLink = document.createElement('a');
                 downloadLink.href = URL.createObjectURL(recordedBlob);
                 downloadLink.download = 'recorded-screen.webm';
                 downloadLink.click();
             };
 
-            // Start recording
             mediaRecorder.start();
 
-            // Update state
             setIsRecording(true);
             setMediaRecorderInstance(mediaRecorder);
         } catch (error) {
@@ -531,7 +494,6 @@ const Meeting = () => {
         }
     };
 
-    // Stop screen recording function
     const stopScreenRecording = () => {
         if (mediaRecorderInstance && mediaRecorderInstance.state !== 'inactive') {
 
@@ -540,19 +502,13 @@ const Meeting = () => {
         }
     };
 
-    // Event handler for starting recording
     const handleStartRecording = () => {
         startScreenRecording();
     };
 
-    // Event handler for stopping recording
     const handleStopRecording = () => {
         stopScreenRecording();
     };
-
-
-
-
 
 
 
@@ -560,22 +516,22 @@ const Meeting = () => {
         <>
 
             {askForUsername === true ?
-
-                <div className='row m-0 justify-content-center'>
-
-
-                    <h2 className='text-center'>Enter into Lobby </h2>
-                    {/* <input className='form-control ' style={{ width: "50vw" }} id="outlined-basic" label="Username" value={username} onChange={e => setUsername(e.target.value)} /> <br /> */}
-
-
-                    <video style={{ height: '60vh', borderRadius: '1cap' }} ref={localVideoref} autoPlay muted></video>
-
-                    <button className='btn btn-sm btn-primary mt-3' style={{ width: "100px" }} onClick={connect}>Connect</button>
-                </div> :
-
-
-
-
+                <>
+                    <nav className="navbar navbar-expand-lg text-light dnav" style={{ backgroundColor: "#001247" }} data-bs-theme="dark">
+                        <div className="container-fluid">
+                            <div className="d-flex align-items-center">
+                                <div className="logo">
+                                    <img src={logoimg} height="40vh" alt="ConnectWave Logo" />
+                                </div>
+                                <h5 className="mt-2 ms-2">ConnectWave</h5>
+                            </div>
+                        </div>
+                    </nav>
+                    <div className='row m-0 d-flex flex-column justify-content-center align-items-center mt-3'>
+                        <h2 className='text-center'>Enter into Lobby </h2>
+                        <video className='localvid' ref={localVideoref} autoPlay muted></video>
+                        <button className='btn btn-sm btn-primary mt-3' style={{ width: "100px" }} onClick={connect}>Connect</button>
+                    </div></> :
 
 
                 <div className='allcontent'>
@@ -615,10 +571,7 @@ const Meeting = () => {
                                         }
                                         <p className='text-center'>{video.username}</p>
                                     </div>
-
-
                                 ))}
-
                             </div>
 
                             {/* emoji display */}
@@ -674,8 +627,6 @@ const Meeting = () => {
                                     </ul>
                                 </div>
                             )}
-
-
                         </div>
                     </div>
 

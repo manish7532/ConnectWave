@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState , useRef} from 'react';
 import './dashboard.css';
 import logo from '../images/logo nav.png';
 import { DateTime } from 'luxon';
@@ -13,8 +13,7 @@ function Dashboard() {
   const [roomID, setRoomID] = useState();
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
-
-
+  const Schedule_eventRef = useRef(null);
 
   const handleJoinMeeting = async () => {
     document.getElementById('modalcls').click()
@@ -38,11 +37,9 @@ function Dashboard() {
   };
 
 
-
   const fetchScheduledMeetings = async () => {
     try {
       if (!user) return;
-      // const response = await axios.get('http://192.168.151.45:8000/api/smeetings',
       const response = await axios.get('https://localhost:8000/api/smeetings',
 
         {
@@ -60,6 +57,11 @@ function Dashboard() {
     fetchScheduledMeetings();
   }, []);
 
+  useEffect(() => {
+    if (Schedule_eventRef.current) {
+      Schedule_eventRef.current.scrollTop = Schedule_eventRef.current.scrollHeight;
+    }
+  }, [scheduledMeetings]);
 
   function calculateTimeUntilStart(startDateTime, endDateTime) {
     const now = new Date();
@@ -266,7 +268,6 @@ function Dashboard() {
                     <i className="fa-regular fa-user"></i>}&nbsp;{user && user.userdata.firstname}
                 </a>
                 <div className="dropdown-menu dropdown-menu-end">
-                  {/* <a className="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal"> */}
                   <a className="dropdown-item" data-bs-toggle="offcanvas" data-bs-target="#profileCanvas" aria-controls="offcanvasRight">
                     Profile
                   </a>
@@ -336,19 +337,17 @@ function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="col-sm-12 col-md-4 scheduled-events calendar-clock-wrapper">
+          <div className="col-sm-12 col-md-4 scheduled-events calendar-clock-wrapper"  style={{ overflowY: 'auto' ,scrollbarWidth:"none"}}>
             <CalendarClock />
             <h5 className="text-center text-primary mt-2 justify-content-center">Scheduled Events</h5>
 
-            <ul className='ps-0'>
+            <ul className='ps-0' ref={Schedule_eventRef} style={{ overflowY: "auto", scrollbarWidth:"none" }}>
               {scheduledMeetings
                 .filter((meeting) => meeting.organizerId === user.userdata._id)
                 .map((meeting) => (
                   <li key={meeting._id} className='schedule_list1 p-2 mb-2'>
                     <div className='d-flex justify-content-between'>
                       <h5>Title: {meeting.title}</h5>
-
-
 
                       <span className="nav-item dropdown d-flex gap-2" data-bs-theme='dark'>
                         <button onClick={() => handleStartMeeting(meeting._id)} className='btn btn-sm btn-primary'>start</button>

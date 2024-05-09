@@ -109,8 +109,8 @@ const ScheduleMeetingForm = () => {
         };
 
         try {
-            // const response = await axios.post('http://192.168.39.79:8000/api/schedule', EventformData);
-            const response = await axios.post('http://localhost:8000/api/schedule', EventformData);
+            // const response = await axios.post('https://192.168.39.79:8000/api/schedule', EventformData);
+            const response = await axios.post('https://localhost:8000/api/schedule', EventformData);
             console.log('Meeting scheduled successfully:', response.data);
             console.log('Selected Country:', selectedCountryIsoCode);
             setMeetingTitle('');
@@ -255,7 +255,7 @@ const ScheduleMeetingForm = () => {
                                 onChange={handleTimeChange}
                                 showTimeSelect
                                 showTimeSelectOnly
-                                timeIntervals={1}
+                                timeIntervals={5}
                                 timeFormat="HH:mm"
                                 dateFormat="h:mm aa"
                                 className="finout"

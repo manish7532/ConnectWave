@@ -389,22 +389,27 @@ app.post('/api/changePass', async (req, res) => {
 app.post('/api/feedback', async (req, res) => {
     const { eventID, userID, rating, audioQuality, videoQuality, suggestion } = req.body;
 
-    const audienceSatisfaction = (audioQuality + videoQuality + rating) / 3;
 
     try {
-        const newFeedback = new Feedback({
-            eventID,
-            userID,
-            rating,
-            audioQuality,
-            videoQuality,
-            audienceSatisfaction,
-            suggestion
-        });
+        if (rating && audioQuality && videoQuality) {
+            const audienceSatisfaction = (audioQuality + videoQuality + rating) / 3;
+            const newFeedback = new Feedback({
+                eventID,
+                userID,
+                rating,
+                audioQuality,
+                videoQuality,
+                audienceSatisfaction,
+                suggestion
+            });
 
-        await newFeedback.save();
+            await newFeedback.save();
 
-        res.status(201).json({ message: 'Feedback submitted successfully' });
+            res.status(201).json({ message: 'Feedback submitted successfully' });
+        }
+        else{
+            res.status(404).json({message:"Ratings are required"})
+        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Failed to submit feedback' });

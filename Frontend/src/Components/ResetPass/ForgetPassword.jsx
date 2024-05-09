@@ -10,7 +10,7 @@ function ForgetPassword() {
     const navigate = useNavigate()
     const handleresetform = async (e) => {
         e.preventDefault()
-        const response = await axios.post('https://localhost:3000/api/resetPass', { email })
+        const response = await axios.post('https://localhost:8000/api/resetPass', { email })
         try {
             if (response.status == 200) {
                 const otp = response.data
