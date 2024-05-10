@@ -20,6 +20,10 @@
     
 }
 
+.chatpage{
+    z-index: 5;
+}
+
 .box.box-warning {
     border-top-color: #809FFF;
 }

@@ -1,72 +1,71 @@
-import React, { useState, useEffect ,useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import socketIOClient from 'socket.io-client';
 import './QuesAns.css';
+import { useSocketContext } from '../Socket/SocketContext';
 
-// const ENDPOINT = "http://192.168.1.105:8000";
-const ENDPOINT = "https://localhost:8000";
 
-const QuesAns = () => {
+const QuesAns = ({ organizerId }) => {
     const [QueAns, setQueAns] = useState('');
     const [response, setResponse] = useState([]);
-    const [socket, setSocket] = useState();
     const resRef = useRef(null);
+    const socket = useSocketContext();
 
     const user = JSON.parse(localStorage.getItem("user"));
 
     useEffect(() => {
-        const socket = socketIOClient(ENDPOINT, { transports: ['websocket'] });
-        setSocket(socket);
-
-
         socket.on("response", (data) => {
             setResponse(prevResponse => [...prevResponse, data]);
         });
-
-
+        
         return () => {
-            if (socket) {
-                socket.disconnect();
-            }
-        };
+            socket.off("response");
+          };
     }, []);
 
     useEffect(() => {
         resRef.current.scrollTop = resRef.current.scrollHeight;
-      }, [response]);
+    }, [response]);
 
     const handleQueAnsSubmit = (e) => {
         e.preventDefault();
         if (QueAns.trim() !== '' && socket) {
-            socket.emit('QueAns', { user: user.userdata.firstname + " " + user.userdata.lastname, QueAns });
+            const userID = user.userdata._id
+            socket.emit('QueAns', { user: user.userdata.firstname + " " + user.userdata.lastname, QueAns, userID });
             setQueAns('');
         }
     };
 
-
     return (
-        <div className="container">
+        <div className="container QAPAge ps-0 pe-0">
             <div>
                 <div className="Que mt-3" style={{ height: '73vh', overflow: 'hidden' }}>
                     <div className="d-flex flex-row justify-content-center p-3 adiv text-white">
                         <span className="pb-3">Q&A</span>
                     </div>
 
-                    <div className="p-2 que-body d-block " style={{overflow:'auto'}} >
+                    <div className="p-2 que-body d-block " style={{ overflow: 'auto' }} >
 
+                        <div className="direct-chat-messages " ref={resRef} style={{ minHeight: '66vh', overflowY: "auto", scrollbarWidth: "none" }}>
+                            {response.map((item, index) => {
+                                const isOrganizerOrCurrentUser = item.userID === user.userdata._id || organizerId.organizerId === user.userdata._id;
+                                return (
+                                    <>
+                                        {
+                                            isOrganizerOrCurrentUser ?
+                                                <div
+                                                    key={index}
+                                                    className={`direct-chat-msg w-100 ${item.user === user.userdata.firstname + " " + user.userdata.lastname ? 'left' : 'right'}`}
+                                                >
+                                                    <div className={`direct-chat-info clearfix ${item.user === user.userdata.firstname + " " + user.userdata.lastname ? 'text-end' : 'text-start'}`}>
+                                                        <span className={`direct-chat-name `}>{item.user}</span>
 
-                        <div className="direct-chat-messages " ref={resRef}  style={{ minHeight: '66vh', overflowY: "auto", scrollbarWidth: "none" }}>
-                            {response.map((item, index) => (
-                                <div
-                                    key={index}
-                                    className={`direct-chat-msg w-100 ${item.user === user.userdata.firstname + " " + user.userdata.lastname ? 'left' : 'right'}`}
-                                >
-                                    <div className={`direct-chat-info clearfix ${item.user === user.userdata.firstname + " " + user.userdata.lastname ? 'text-end' : 'text-start'}`}>
-                                        <span className={`direct-chat-name `}>{item.user}</span>
-
-                                    </div>
-                                    <div className={`direct-chat-text mr-2 p-3 Ans ${item.user === user.userdata.firstname + " " + user.userdata.lastname ? 'float-end' : 'float-start'}`}>{item.QueAns}</div>
-                                </div>
-                            ))}
+                                                    </div>
+                                                    <div className={`direct-chat-text mr-2 p-3 Ans ${item.user === user.userdata.firstname + " " + user.userdata.lastname ? 'float-end' : 'float-start'}`}>{item.QueAns}</div>
+                                                </div> : <></>
+                                        }
+                                    </>
+                                )
+                            })}
                         </div>
 
 
@@ -74,7 +73,7 @@ const QuesAns = () => {
                     </div>
                 </div>
                 {/* <br /> */}
-                <div className="form-group px-3 ans-footer" style={{ bottom: "0",backgroundColor:"black" }}>
+                <div className="form-group px-3 ans-footer" style={{ bottom: "0", backgroundColor: "black" }}>
                     <form onSubmit={handleQueAnsSubmit}>
                         <div className="input-group">
                             <input

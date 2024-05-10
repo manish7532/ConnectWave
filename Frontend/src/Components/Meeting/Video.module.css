@@ -4,10 +4,11 @@
     height: 20vh;
     width: auto;
     left: 0;
+    z-index: 0;
+    overflow-y: hidden !important;
     border-radius: 20px;
 }
 .meetUserVideoname {
-    /* background-color: rgba(0, 0, 0, 0.253); */
     width: 5vw;
     color: rgb(183, 185, 189);
     position: absolute;
@@ -17,7 +18,7 @@
 .meetUserVideoname1 {
     background-color: rgba(0, 0, 0, 0.253);
     color: rgba(0, 0, 0, 0);
-    width: 20vw;
+    width: 30vw;
     position: absolute;
     bottom: 15vh;
     left: 0vw;

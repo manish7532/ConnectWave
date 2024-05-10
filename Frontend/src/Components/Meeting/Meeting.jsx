@@ -8,9 +8,9 @@ import styles from './Video.module.css'
 import { useLocation } from 'react-router-dom';
 import logoimg from '../images/logo nav.png'
 import axios from 'axios';
+import { useSocketContext } from '../Socket/SocketContext';
 
-const socket = socketIOClient.connect('https://localhost:8000');
-// const socket = socketIOClient('https://192.168.1.103:8000'); 
+
 const peerConfigConnections = {
     "iceServers": [
         { "urls": "stun:stun.l.google.com:19302" }
@@ -25,6 +25,7 @@ const Meeting = () => {
     const { state } = useLocation();
     const roomID = state.roomID;
     const newEvent = state.event;
+    const socket = useSocketContext();
     var socketRef = useRef();
     let socketIdRef = useRef();
     let localVideoref = useRef();
@@ -43,12 +44,11 @@ const Meeting = () => {
     // screen recording
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorderInstance, setMediaRecorderInstance] = useState(null);
-
     const [connectedUsers, setConnectedUsers] = useState([]);
+    const [receivedEmoji, setReceivedEmoji] = useState();
     const [showUserList, setShowUserList] = useState(false);
     const [showChat, setShowChat] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const [receivedEmoji, setReceivedEmoji] = useState();
     const [showQuesAns, setShowQuesAns] = useState(false);
 
     const toggleChat = () => {
@@ -86,7 +86,6 @@ const Meeting = () => {
         setShowQuesAns(false);
     };
 
-
     useEffect(() => {
         socket.on('userList', (users) => {
             setConnectedUsers(users);
@@ -104,9 +103,9 @@ const Meeting = () => {
         };
     }, []);
 
+
     // ------------------------------------  video -------------------------------------
     useEffect(() => {
-        // console.log("HELLO")
         getPermissions();
     }, [])
 
@@ -164,8 +163,7 @@ const Meeting = () => {
     useEffect(() => {
         if (video !== undefined && audio !== undefined) {
             getUserMedia();
-            console.log("SET STATE HAS ", "Video==>", video, ' Audio==>', audio);
-
+            // console.log("SET STATE HAS ", "Video==>", video, ' Audio==>', audio);
         }
     }, [video, audio])
 
@@ -173,7 +171,6 @@ const Meeting = () => {
         setVideo(videoAvailable);
         setAudio(audioAvailable);
         connectToSocketServer();
-
     }
 
     let getUserMediaSuccess = (stream) => {
@@ -303,15 +300,15 @@ const Meeting = () => {
     }
 
     let connectToSocketServer = async () => {
-        try {
-            const userID = user.userdata._id;
-            const eventID = newEvent._id;
-            const role = newEvent.userID === user.userdata._id;
-            const response = await axios.post('https://localhost:8000/api/participants', { userID, eventID, role });
-        } catch (error) {
-            console.log(error);
-        }
-        socketRef.current = socketIOClient.connect('https://localhost:8000');
+        // try {
+        //     const userID = user.userdata._id;
+        //     const eventID = newEvent._id;
+        //     const role = newEvent.userID === user.userdata._id;
+        //     const response = await axios.post('https://localhost:8000/api/participants', { userID, eventID, role });
+        // } catch (error) {
+        //     console.log(error);
+        // }
+        socketRef.current = socket;
 
         socketRef.current.on('signal', gotMessageFromServer);
 
@@ -320,7 +317,7 @@ const Meeting = () => {
         const userID = user.userdata._id;
         let data = [path, username, roomID, userID]
 
-        socketRef.current.on('connect', () => {
+        // socketRef.current.on('connect', () => {
             socketRef.current.emit('join-call', data)
             socketIdRef.current = socketRef.current.id
             data = [];
@@ -408,7 +405,7 @@ const Meeting = () => {
                 }
             });
 
-        })
+        // })
     }
 
     let silence = () => {
@@ -535,8 +532,8 @@ const Meeting = () => {
 
 
                 <div className='allcontent'>
-                    <div className='row m-0 d-flex meetingdiv' style={{ height: '87vh', backgroundColor: "black" }}>
-                        <div className="col-md-9 my-auto">
+                    <div className='row m-0 d-flex meetingdiv ' style={{ height: '87vh', backgroundColor: "black" }}>
+                        <div className={`col-md-9 my-auto d-md-block ${showUserList || showChat || showQuesAns ? 'd-none' : ''} `} >
 
                             <video id='localvideo' className={styles.meetUserVideo} ref={localVideoref} autoPlay muted></video>
                             <span className={styles.meetUserVideoname1}>a</span>
@@ -584,11 +581,11 @@ const Meeting = () => {
                         </div>
 
                         <div className="col-md-3 col-sm-11" style={{ overflow: 'hidden' }} >
-                            <div className="container-fluid" style={{ borderRadius: '1cap', display: showChat ? 'block' : 'none' }}>
+                            <div className="container-fluid ps-0 pe-0" style={{ borderRadius: '1cap', display: showChat ? 'block' : 'none' }}>
                                 <ChatApp />
                             </div>
-                            <div className="container-fluid" style={{ borderRadius: '1cap', display: showQuesAns ? 'block' : 'none' }}>
-                                <QuesAns />
+                            <div className="container-fluid ps-0 pe-0" style={{ borderRadius: '1cap', display: showQuesAns ? 'block' : 'none' }}>
+                                <QuesAns organizerId={{ organizerId: newEvent.organizerId }} />
                             </div>
 
                             {showEmojiPicker && (
@@ -632,7 +629,7 @@ const Meeting = () => {
 
                     <nav className="row m-0 navbar mnav fixed-bottom" style={{ height: '13vh', bottom: "0" }}>
                         <div className="col-lg-2 col-md-2 col-sm-0"></div>
-                        <div className="col-lg-8 col-md-8 col-sm-12 d-flex gap-2 justify-content-center">
+                        <div className="col-lg-8 col-md-8 col-sm-12 d-flex gap-2 justify-content-center ">
                             <div className="button-container" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
                                 <a className="btn av text-light mb-1 justify-content-start">
                                     <img src={logoimg} height="30vh" /><br />
@@ -687,7 +684,7 @@ const Meeting = () => {
                             </div>
                         </div>
                         <div className="col-lg-2 col-md-2 col-sm-0">
-                            <a onClick={handleEndCall} className="btn btn-danger text-light leave" type="button">Leave</a>
+                            <a onClick={handleEndCall} className={`btn btn-danger text-light leave d-md-block ${showUserList || showChat || showEmojiPicker || showQuesAns ? 'd-none' : ''} `} type="button">Leave</a>
                         </div>
                     </nav>
                 </div>

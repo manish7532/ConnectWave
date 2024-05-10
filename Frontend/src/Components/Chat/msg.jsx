@@ -1,37 +1,32 @@
 import { useState, useEffect, useRef } from 'react';
 import socketIOClient from 'socket.io-client';
 import './msg.css';
-
-const ENDPOINT = "https://localhost:8000";
+import { useSocketContext } from '../Socket/SocketContext';
 
 const ChatApp = () => {
   const [message, setMessage] = useState('');
   const [receivedMessages, setReceivedMessages] = useState([]);
-  const [socket, setSocket] = useState();
   const chatMessagesRef = useRef(null);
-
+  const socket = useSocketContext();
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-    const socket = socketIOClient(ENDPOINT, { transports: ['websocket'] });
-    setSocket(socket);
-
-    socket.on("connect", () => {
-      socket.emit('joined', user.userdata.firstname + " " +user.userdata.lastname);
-    });
-    
   
+    socket.emit('joined', user.userdata.firstname + " " +user.userdata.lastname);
+    
     socket.on("sendmessage", (data) => {
       setReceivedMessages(prevMessages => [...prevMessages, data]);
+      console.log("---->", data);
     });
 
     return () => {
-      socket.disconnect();
+      socket.off("sendmessage");
     };
   }, []);
-
+  
   useEffect(() => {
     chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    console.log(receivedMessages)
   }, [receivedMessages]);
 
   const handleMessageSubmit = (e) => {
@@ -43,15 +38,15 @@ const ChatApp = () => {
   };
 
   return (
-    <div className="chatpage "  style={{ height: '87vh', overflow: 'hidden'}}>
+    <div className="chatpage "  style={{ height: '88vh', overflow: 'hidden'}}>
       <div className="chatContainer" style={{ overflow: "hidden" }}>
         <div className="col-md-4 col-sm-12 col-12"  style={{ width: "100%", marginRight: "-20px" }}>
           <div className="box box-warning direct-chat direct-chat-warning" >
             <div className="box-header with-border">
               <h3 className="box-title">Chat Messages</h3>
             </div>
-            <div className="box-body"  style={{ overflowY: "auto", height: "calc(85vh - 12vh)" }}>
-              <div className="direct-chat-messages" ref={chatMessagesRef} style={{ minHeight:'73vh', overflowY: "auto", scrollbarWidth:"none" }}>
+            <div className="box-body"  style={{ overflowY: "auto", height: "calc(83vh - 12vh)" }}>
+              <div className="direct-chat-messages" ref={chatMessagesRef} style={{ minHeight:'70vh', overflowY: "auto", WebkitOverflowScrolling: "touch",scrollbarWidth:"none" }}>
                 {receivedMessages.map((data, index) => (
                   <div
                     key={index}

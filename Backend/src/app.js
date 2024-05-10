@@ -85,7 +85,7 @@ io.on('connection', (socket) => {
 
     // ------------------ chat , QNA, reactions
     socket.on('joined', (user) => {
-        console.log(`${user} has joined`);
+        // console.log(`${user} has joined`);
         if (!connectedUsers.includes(user)) {
             connectedUsers.push(user);
             io.emit('userList', connectedUsers);
@@ -101,17 +101,15 @@ io.on('connection', (socket) => {
         io.emit('sendEmoji', { emojiObject });
     });
 
-    socket.on('QueAns', ({ user, QueAns }) => {
-        io.emit('response', { user, QueAns });
+    socket.on('QueAns', ({ user, QueAns, userID }) => {
+        io.emit('response', { user, QueAns, userID });
     })
 
 
 
-
     socket.on('disconnect', () => {
-
+        console.log('disconnected')
         var diffTime = Math.abs(timeOnline[socket.id] - new Date())
-
 
         if (socket.user) {
             const index = connectedUsers.indexOf(socket.user);
@@ -144,7 +142,6 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
-console.log(path.join(__dirname, '../uploads'))
 const PORT = process.env.PORT || 4000;
 
 server.listen(PORT, () => {
@@ -407,8 +404,8 @@ app.post('/api/feedback', async (req, res) => {
 
             res.status(201).json({ message: 'Feedback submitted successfully' });
         }
-        else{
-            res.status(404).json({message:"Ratings are required"})
+        else {
+            res.status(404).json({ message: "Ratings are required" })
         }
     } catch (error) {
         console.error(error);

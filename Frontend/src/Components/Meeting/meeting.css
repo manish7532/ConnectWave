@@ -19,6 +19,10 @@ body {
     border-top-right-radius: 5px;
 }
 
+.av {
+    border: none !important;
+}
+
 @media (max-width: 767px) {
 
     #emoji {
@@ -87,4 +91,14 @@ body {
     font-weight: bold;
     font-size: 15px;
     color: white
+}
+@media (max-width: 320px) {
+    .col-md-9 {
+        width: 100%;     
+    }
+    .col-md-3 {
+        width: 100%;
+        height: fit-content;
+        margin-top: 30px;
+    }
 }
