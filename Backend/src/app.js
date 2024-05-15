@@ -10,7 +10,7 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { Server } from 'socket.io';
-import { createServer } from 'node:https';
+import { createServer } from 'node:http';
 import { Country } from 'country-state-city';
 import otpGenerator from 'otp-generator';
 import { sendEmail } from './resetPass/email.js';
@@ -20,16 +20,13 @@ dotenv.config()
 const app = express();
 
 //socket connection
-const httpsOptions = {
-    key: fs.readFileSync('./cert.key'),
-    cert: fs.readFileSync('./cert.crt')
-};
-const server = createServer(httpsOptions, app);
+
+const server = createServer(app);
 const io = new Server(server, {
     cors: {
         origin: [
-            "https://localhost:5173",
-            "https://192.168.137.1:5173",
+            "http://localhost:5173",
+            "http://192.168.137.1:5173",
         ],
         methods: ["GET", "POST"]
     }
