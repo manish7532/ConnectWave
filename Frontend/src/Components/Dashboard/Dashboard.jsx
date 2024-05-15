@@ -15,9 +15,14 @@ function Dashboard() {
   const [scheduledMeetings, setScheduledMeetings] = useState([]);
   const [roomID, setRoomID] = useState();
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+  // const user = JSON.parse(localStorage.getItem("user"));
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
   const Schedule_eventRef = useRef(null);
   const btn_submit = useRef(null);
+
+  // useEffect(() => {
+  //   setUser()
+  // }, [])
 
   const handleJoinMeeting = async () => {
     document.getElementById('modalcls').click()
@@ -262,7 +267,6 @@ function Dashboard() {
         country: country.name,
       }));
     }
-      
   }, [user]);
 
   const handleFileChange = (e) => {
@@ -300,6 +304,7 @@ function Dashboard() {
         });
         localStorage.setItem("user", JSON.stringify({ userdata: response.data.user }));
         setProfilePhoto('');
+        setUser(JSON.parse(localStorage.getItem("user")))
       }
     } catch (error) {
       console.error('Error uploading profile photo:', error);
@@ -335,13 +340,13 @@ function Dashboard() {
           </button>
 
           <div className="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
-            <ul className="navbar-nav mb-2 mb-lg-0">
+            <ul className="navbar-nav mb-2 mb-lg-0 align-items-center">
 
-              <li className="nav-item">
+              {/* <li className="nav-item">
                 <Link to={'/meetingHistory'} className="nav-link" >
                   <i height='4vh' className="bi bi-camera-video"></i>&nbsp;Meetings
                 </Link>
-              </li>
+              </li> */}
 
               <li className="nav-item dropdown">
                 <a data-bs-toggle="dropdown" className="nav-icon nav-link pe-md-0">
@@ -357,9 +362,6 @@ function Dashboard() {
                 <div className="dropdown-menu dropdown-menu-end">
                   <a className="dropdown-item" data-bs-toggle="offcanvas" data-bs-target="#profileCanvas" aria-controls="offcanvasRight">
                     Profile
-                  </a>
-                  <a className="dropdown-item">
-                    Setting
                   </a>
                   <a className="dropdown-item" onClick={handleLogout}>
                     Logout
@@ -417,10 +419,15 @@ function Dashboard() {
                 </Link>
               </div>
               <div className="col-sm-6 mb-3">
-                <a className="btn btn-lg btn-primary ctrls">
+                <Link to={'/meetingHistory'} className="btn btn-lg btn-primary ctrls">
+                  {/* <i className="fas fa-arrow-up mb-2"></i> */}
+                  <i className="fas fa-history"></i>
+                  <span className="label">Meetings</span>
+                </Link>
+                {/* <a className="btn btn-lg btn-primary ctrls">
                   <i className="fas fa-arrow-up mb-2"></i>
                   <span className="label">Share Screen</span>
-                </a>
+                </a> */}
               </div>
             </div>
           </div>

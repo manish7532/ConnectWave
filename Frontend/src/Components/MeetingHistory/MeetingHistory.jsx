@@ -92,6 +92,7 @@ function MeetingHistory() {
             </nav>
 
             <div className="container d-flex flex-column align-items-center justify-content-center mt-5" >
+                <h3 className="text-center">Meeting Records</h3>
                 {meetings.map((meeting, index) => (
                     <div key={index} className="eventCard card m-2" data-bs-theme='dark' >
                         <div className="card-body">
