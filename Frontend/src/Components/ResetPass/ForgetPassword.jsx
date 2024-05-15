@@ -10,7 +10,7 @@ function ForgetPassword() {
     const navigate = useNavigate()
     const handleresetform = async (e) => {
         e.preventDefault()
-        const response = await axios.post('https://localhost:8000/api/resetPass', { email })
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/resetPass`, { email })
         try {
             if (response.status == 200) {
                 const otp = response.data

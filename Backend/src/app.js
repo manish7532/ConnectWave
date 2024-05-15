@@ -530,31 +530,24 @@ app.post('/api/participants', async (req, res) => {
         const d = new Date()
         const data = [req.body.userID, req.body.eventID, req.body.role]
         if (data) {
-            console.log(data);
-            console.log('user & event ids ======>', data[0], '  ', data[1]);
             const user = await User.findOne({ _id: data[0] });
-            console.log('user found ====>', user);
             const event = await Event.findOne({ _id: data[1] });
-            console.log('event found ====>', event);
             const participant = await Participant.findOne({ userID: data[0], eventID: data[1] });
             if (participant) {
                 const tempArray = participant.joinedAt;
-                participant = {
-                    joinedAt: [...tempArray, d],
-                }
-                await participant.save();
+                tempArray.push(d)
+                await Participant.updateOne({ userID: data[0], eventID: data[1] }, { $set: { joinedAt: tempArray } })
             }
             else {
                 const participant = new Participant({
                     userID: data[0],
                     eventID: data[1],
                     joinedAt: [d],
-                    role: data[2] ? 'host' : 'participant'
+                    role: data[2] ? 'host' : 'user',
+                    duration: 0
                 })
                 await participant.save();
-                console.log("Participant Data ==========> ", participant);
             }
-            // await participant.save();
             res.send("Everything OK! 👍")
         }
     } catch (error) {
@@ -562,3 +555,100 @@ app.post('/api/participants', async (req, res) => {
         console.log(error)
     }
 })
+
+
+app.post('/api/participants-left', async (req, res) => {
+    try {
+        const data = [req.body.userID, req.body.eventID];
+        let participant = await Participant.findOne({ userID: data[0], eventID: data[1] });
+        let joinArray = participant.joinedAt;
+        let leftArray = participant.leftAt;
+        let duration = participant.duration;
+        leftArray.push(new Date());
+        const i = joinArray.length - 1;
+        duration += parseInt(Math.round((leftArray[i] - joinArray[i]) / 60000));
+        await Participant.updateOne({ userID: data[0], eventID: data[1] }, {
+            $set: {
+                leftAt: leftArray,
+                duration: duration
+            }
+        })
+        res.status(201).json({ message: 'success' });
+    } catch (error) {
+        console.log(error);
+        res.status(404).send({ message: 'somethihng went wrong' });
+    }
+})
+
+
+// ------------ finding user participated eventts-----------
+app.post('/api/getMyMeetings', async (req, res) => {
+    try {
+        const userID = req.body.userID;
+        const meetings = await Participant.find({ userID: userID });
+        res.status(201).json({ meetings });
+    } catch (error) {
+        res.status(404).send('Something went wrong');
+    }
+})
+
+
+
+//----------------remove previous photos form filesystem----------------
+function removeAllFilesSync(directory) {
+    const files = fs.readdirSync(directory);
+
+    for (const file of files) {
+        const filePath = path.join(directory, file);
+        fs.unlinkSync(filePath);
+    }
+}
+
+
+
+// ------------------ profile photo update ----------------
+app.post('/api/profilePhoto', (req, res) => {
+    const form = formidable({
+        keepExtensions: true,
+        allowEmptyFiles: false,
+        minFileSize: 1
+    });
+
+    form.parse(req, async (err, fields, files) => {
+
+        if (err) {
+            console.error('Formidable parsing error:', err);
+            return res.status(500).send({ error: 'Error parsing form data' });
+        }
+
+        if (!files.profilePhoto) {
+            return res.status(400).send({ error: 'No file uploaded' });
+        }
+        const userId = fields.userID[0]
+        try {
+            const user = await User.findById({ _id: userId });
+            if (!user) {
+                return res.status(404).send({ error: 'User not found' });
+            }
+
+            const file = files.profilePhoto;
+            const userFolderPath = path.join(__dirname, '../uploads', userId);
+            const newFileName = file[0].originalFilename;
+            const newFilePath = path.join(userFolderPath, newFileName);
+
+            if (!fs.existsSync(userFolderPath)) {
+                fs.mkdirSync(userFolderPath, { recursive: true });
+            }
+            removeAllFilesSync(userFolderPath) // deleting previous files
+            await fs.promises.rename(file[0].filepath, newFilePath);
+            user.profilePhoto = newFileName;
+            await user.save();
+
+            res.status(200).json({ user });
+
+        } catch (error) {
+            console.error('Error uploading profile photo:', error);
+            res.status(500).send({ error: 'Error uploading profile photo' });
+        }
+    });
+});

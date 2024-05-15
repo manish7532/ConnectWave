@@ -1,0 +1,10 @@
+ .eventCard {
+     background-color: #4241478e;
+     width: 80vw;
+     border-radius: 10px;
+     border: 1px solid rgb(212, 206, 206);
+ }
+
+ .eventCard h4 {
+     font-weight: bold;
+ }

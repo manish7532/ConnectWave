@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import socketIOClient from 'socket.io-client';
 
 const SocketContext = createContext();
@@ -9,20 +9,20 @@ export const useSocketContext = () => {
 
 
 export const SocketProvider = ({ children }) => {
-    const ENDPOINT = 'https://localhost:8000';
+  const ENDPOINT = import.meta.env.VITE_API_URL;
 
-    let [socket,setSocket]=useState(null);
+  let [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     if (!socket) {
       const newsocket = socketIOClient(ENDPOINT, { transports: ['websocket'] });
-        console.log("socket is connectted")
+      // console.log("socket is connectted")
 
-    setSocket(newsocket);
+      setSocket(newsocket);
 
-        
-    newsocket.on('connect', () => {
+
+      newsocket.on('connect', () => {
         setConnected(true);
       });
 
@@ -30,20 +30,20 @@ export const SocketProvider = ({ children }) => {
         setConnected(false);
       });
 
-      return ()=>{
+      return () => {
         newsocket.close();
         setSocket(null)
         setConnected(false);
       }
     }
-    else{
+    else {
       if (socket) {
         console.log("socket is already disconnectted")
         socket.close();
         socket = null;
         setConnected(false);
       }
-    };
+    }
   }, []);
 
 

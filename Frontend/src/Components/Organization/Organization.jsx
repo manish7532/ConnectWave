@@ -34,7 +34,7 @@ function Organization() {
 
         try {
 
-            const response = await axios.post('https://localhost:8000/api/organization', formData, {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/organization`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

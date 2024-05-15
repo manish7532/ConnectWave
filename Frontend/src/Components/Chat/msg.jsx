@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import socketIOClient from 'socket.io-client';
 import './msg.css';
 import { useSocketContext } from '../Socket/SocketContext';
 
@@ -16,7 +15,7 @@ const ChatApp = () => {
     
     socket.on("sendmessage", (data) => {
       setReceivedMessages(prevMessages => [...prevMessages, data]);
-      console.log("---->", data);
+      // console.log("---->", data);
     });
 
     return () => {
@@ -26,7 +25,7 @@ const ChatApp = () => {
   
   useEffect(() => {
     chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
-    console.log(receivedMessages)
+    // console.log(receivedMessages)
   }, [receivedMessages]);
 
   const handleMessageSubmit = (e) => {

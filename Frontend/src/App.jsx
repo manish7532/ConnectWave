@@ -8,9 +8,63 @@ import ForgetPassword from './Components/ResetPass/ForgetPassword'
 import ResetPass from './Components/ResetPass/ResetPass'
 import Feedback from './Components/Feedback/Feedback'
 import Schedule from './Components/Schedule/Schedule'
-import { Routes, Route } from 'react-router-dom'
+import MeetingHistory from "./Components/MeetingHistory/MeetingHistory"
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect } from "react"
+import axios from "axios"
+
 
 function App() {
+  const navigate = useNavigate();
+
+  const location = useLocation();
+
+  const pathsToExcludeFromAuthentication = [
+    '*',
+    '/',
+    '/register',
+    '/register/organization',
+    '/login',
+    '/reset',
+    'resetPass'
+  ];
+
+  const shouldCheckAuthentication = !pathsToExcludeFromAuthentication.includes(location.pathname);
+
+
+
+  const checkAuthentication = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!token || !user) {
+        navigate('/login');
+        return;
+      }
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/verify`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 200) {
+        // console.log("User is authenticated");
+      } else {
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      navigate('/login');
+    }
+  };
+
+  useEffect(() => {
+    if (shouldCheckAuthentication) {
+      checkAuthentication();
+    }
+  }, [location.pathname]);
+
+
 
   return (
     <>
@@ -25,7 +79,7 @@ function App() {
         <Route path="/resetPass" element={<ResetPass />} />
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/schedule" element={<Schedule />} />
-
+        <Route path="/meetingHistory" element={<MeetingHistory />} />
       </Routes>
     </>
   )

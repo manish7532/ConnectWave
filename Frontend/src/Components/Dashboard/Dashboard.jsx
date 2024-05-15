@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect, useState , useRef} from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './dashboard.css';
 import logo from '../images/logo nav.png';
 import { DateTime } from 'luxon';
@@ -8,17 +8,21 @@ import copy from 'clipboard-copy';
 import CalendarClock from './CalendarClock';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { countryToAlpha2 } from "country-to-iso";
+import { Country } from 'country-state-city'
+
 function Dashboard() {
   const [scheduledMeetings, setScheduledMeetings] = useState([]);
   const [roomID, setRoomID] = useState();
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const Schedule_eventRef = useRef(null);
+  const btn_submit = useRef(null);
 
   const handleJoinMeeting = async () => {
     document.getElementById('modalcls').click()
     try {
-      const response = await axios.post('https://localhost:8000/api/getEvent', { roomID: roomID })
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/getEvent`, { roomID: roomID })
       if (response.status == 201) {
         navigate('/meeting/' + roomID, { state: { roomID: roomID, event: response.data.event } });
       }
@@ -40,7 +44,7 @@ function Dashboard() {
   const fetchScheduledMeetings = async () => {
     try {
       if (!user) return;
-      const response = await axios.get('https://localhost:8000/api/smeetings',
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/smeetings`,
 
         {
           params: {
@@ -133,7 +137,7 @@ function Dashboard() {
   //------------log out------------------------
   async function handleLogout() {
     try {
-      const response = await axios.get('https://localhost:8000/api/logout');
+      const response = await axios.get(`${import.meta.env}/api/logout`);
       console.log('Logged out successfully');
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -143,46 +147,46 @@ function Dashboard() {
     }
   }
 
-  const checkAuthentication = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!token || !user) {
-        navigate('/login');
-        return;
-      }
+  // const checkAuthentication = async () => {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     const user = JSON.parse(localStorage.getItem("user"));
+  //     if (!token || !user) {
+  //       navigate('/login');
+  //       return;
+  //     }
 
-      const response = await axios.get('https://localhost:8000/api/verify', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+  //     const response = await axios.get('https://localhost:8000/api/verify', {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`
+  //       }
+  //     });
 
-      if (response.status === 200) {
-        console.log("User is authenticated");
-      } else {
-        navigate('/login');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      navigate('/login');
-    }
-  };
+  //     if (response.status === 200) {
+  //       console.log("User is authenticated");
+  //     } else {
+  //       navigate('/login');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     navigate('/login');
+  //   }
+  // };
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    setTimeout(() => {
-      checkAuthentication();
-    }, '5000')
+  //   setTimeout(() => {
+  //     checkAuthentication();
+  //   })
 
-  }, []);
+  // }, []);
 
 
   // -------------------------------new Meeting-----------------------------------
 
   const handleNewMeeting = async () => {
     try {
-      const response = await axios.post('https://localhost:8000/api/event', { userID: user.userdata._id })
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/event`, { userID: user.userdata._id })
       navigate('/meeting/' + response.data.event._id, { state: { roomID: response.data.event._id, event: response.data.event } });
     } catch (error) {
       console.log(error);
@@ -194,7 +198,7 @@ function Dashboard() {
   // ---------start scheduled meeting-----------------
   const handleStartMeeting = async (id) => {
     try {
-      const response = await axios.post('https://localhost:8000/api/getEvent', { roomID: id })
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/getEvent`, { roomID: id })
       navigate('/meeting/' + id, { state: { roomID: id, event: response.data.event } });
     } catch (error) {
       console.log(error);
@@ -214,7 +218,7 @@ function Dashboard() {
   //----------------------delete event---------------------
   const handleDeleteEvent = async (id) => {
     try {
-      const response = await axios.post('https://localhost:8000/api/deleteEvent', { id });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/deleteEvent`, { id });
       console.log('Event deleted successfully:', response.data);
       setScheduledMeetings((prevMeetings) => prevMeetings.filter((meeting) => meeting._id !== id));
     } catch (error) {
@@ -224,7 +228,88 @@ function Dashboard() {
 
 
 
-  const imgurl = `https://localhost:8000/uploads/${user.userdata._id}/${user.userdata.profilePhoto}`
+
+  const [imgurl, setImgurl] = useState(``);
+  useEffect(() => {
+    if (user && user.userdata.profilePhoto) {
+      setImgurl(`${import.meta.env.VITE_API_URL}/uploads/${user.userdata._id}/${user.userdata.profilePhoto}`)
+    }
+  }, [user])
+
+
+  //------------ offcanvas profile update--------------------
+  const [data, setData] = useState({
+    firstname: '',
+    lastname: '',
+    email: '',
+    country: '',
+    type: '',
+  })
+
+  const [profilePhoto, setProfilePhoto] = useState('');
+
+
+  useEffect(() => {
+    if (user) {
+      const c = countryToAlpha2(user.userdata.country);
+      const country = Country.getCountryByCode(c);
+      setData((prevData) => ({
+        ...prevData,
+        firstname: user.userdata.firstname,
+        lastname: user.userdata.lastname,
+        email: user.userdata.email,
+        // type: user.userdata.type,
+        country: country.name,
+      }));
+    }
+      
+  }, [user]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setProfilePhoto(file);
+  };
+
+  useEffect(() => {
+    if (profilePhoto !== '') {
+      btn_submit.current.click();
+    }
+  }, [profilePhoto])
+
+
+
+  // ------ update profile photo --------
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    if (!profilePhoto) {
+      alert('Please select a profile photo to upload.');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('userID', user.userdata._id);
+    formData.append('profilePhoto', profilePhoto);
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/profilePhoto`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      if (response.status === 200) {
+        toast.success("Profile photo updated successfully", {
+          position: "top-center"
+        });
+        localStorage.setItem("user", JSON.stringify({ userdata: response.data.user }));
+        setProfilePhoto('');
+      }
+    } catch (error) {
+      console.error('Error uploading profile photo:', error);
+      toast.error('Error uploading profile photo', {
+        position: "top-center"
+      });
+    }
+  };
+
+
 
 
   return (
@@ -251,21 +336,23 @@ function Dashboard() {
 
           <div className="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
             <ul className="navbar-nav mb-2 mb-lg-0">
-              {/* <li className="nav-item">
-                <Link to={'/dashboard'} className="nav-link" aria-current="page">
-                  <i className="bi bi-house"></i>&nbsp;Home
+
+              <li className="nav-item">
+                <Link to={'/meetingHistory'} className="nav-link" >
+                  <i height='4vh' className="bi bi-camera-video"></i>&nbsp;Meetings
                 </Link>
-              </li> */}
-              {/* <li className="nav-item">
-                <a className="nav-link">
-                  <i className="bi bi-camera-video"></i>&nbsp;Meetings
-                </a>
-              </li> */}
+              </li>
 
               <li className="nav-item dropdown">
                 <a data-bs-toggle="dropdown" className="nav-icon nav-link pe-md-0">
-                  {user.userdata.profilePhoto ? <img src={imgurl} alt="" style={{ borderRadius: '50%', height: '4vh' }} /> :
-                    <i className="fa-regular fa-user"></i>}&nbsp;{user && user.userdata.firstname}
+                  {imgurl && (
+                    <img src={imgurl} alt="" style={{ borderRadius: '50%', height: '4vh' }} />
+                  )}
+                  {!imgurl && (
+                    <i className="fa-regular fa-user"></i>
+                  )}
+
+                  &nbsp;{user && user.userdata.firstname}
                 </a>
                 <div className="dropdown-menu dropdown-menu-end">
                   <a className="dropdown-item" data-bs-toggle="offcanvas" data-bs-target="#profileCanvas" aria-controls="offcanvasRight">
@@ -337,11 +424,11 @@ function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="col-sm-12 col-md-4 scheduled-events calendar-clock-wrapper"  style={{ overflowY: 'auto' ,scrollbarWidth:"none"}}>
+          <div className="col-sm-12 col-md-4 scheduled-events calendar-clock-wrapper" style={{ overflowY: 'auto', scrollbarWidth: "none" }}>
             <CalendarClock />
             <h5 className="text-center text-primary mt-2 justify-content-center">Scheduled Events</h5>
 
-            <ul className='ps-0' ref={Schedule_eventRef} style={{ overflowY: "auto", scrollbarWidth:"none" }}>
+            <ul className='ps-0' ref={Schedule_eventRef} style={{ overflowY: "auto", scrollbarWidth: "none" }}>
               {scheduledMeetings
                 .filter((meeting) => meeting.organizerId === user.userdata._id)
                 .map((meeting) => (
@@ -386,11 +473,59 @@ function Dashboard() {
       {/* ----------------------profile canvas----------------------------- */}
       <div className="offcanvas offcanvas-end" data-bs-theme='dark' tabIndex="-1" id="profileCanvas">
         <div className="offcanvas-header">
-          <h5 className="offcanvas-title" id="offcanvasRightLabel">Offcanvas right</h5>
+          <h5 className="offcanvas-title" id="offcanvasRightLabel">Profile</h5>
           <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div className="offcanvas-body">
-          ...
+        <div className="offcanvas-body" style={{ overflowY: "auto", scrollbarWidth: "none" }}>
+
+          {/* ---------------------profile photo update--------------------- */}
+          <form onSubmit={handleProfileUpdate} encType="multipart/form-data">
+            <span className="d-flex justify-content-center" style={{ height: '25vh' }}>
+              {imgurl && (
+                <img src={imgurl} alt="" style={{ borderRadius: '50%' }} />
+              )}
+              {!imgurl && (<>
+                <i className="fa-regular fa-user fa-6x" style={{ borderRadius: '50%', padding: '5vh', border: '.1px solid #1d1d21' }}></i>&nbsp;
+              </>
+              )}
+            </span>
+            <input type="file" id="fileInput" accept='image/*' hidden name="profilePhoto" className="form-control" onChange={(e) => handleFileChange(e)} />
+            <span className="d-flex justify-content-center align-items-center gap-1 mt-2" style={{ cursor: 'pointer' }} onClick={() => { document.getElementById('fileInput').click() }}><i className="fas fa-edit"></i>Edit</span>
+            <button type="submit" hidden ref={btn_submit}></button>
+          </form>
+
+
+          {/* -------------------------profile details update-------------------- */}
+          <form encType="multipart/form-data">
+            <div className="row">
+              <div className="col-md-12 mb-2">
+                <label htmlFor="firstName" className="form-label">
+                  First Name
+                </label>
+                <input type="text" name="firstname" className="form-control" value={data.firstname} onChange={(e) => setData({ ...data, firstname: e.target.value })} required disabled />
+              </div>
+              <div className="col-md-12 mb-2">
+                <label htmlFor="lastName" className="form-label">
+                  Last Name
+                </label>
+                <input type="text" name="lastname" className="form-control" value={data.lastname} onChange={(e) => setData({ ...data, lastname: e.target.value })} required disabled />
+              </div>
+              <div className="col-md-12 mb-2">
+                <label htmlFor="email" className="form-label">
+                  Email
+                </label>
+                <input type="email" name="email" className="form-control" value={data.email} onChange={(e) => setData({ ...data, email: e.target.value })} required disabled />
+              </div>
+              <div className="col-md-12 mb-2">
+                <label htmlFor="country" className="form-label">
+                  Country
+                </label>
+
+                <input type="text" name="country" className="form-control" value={data.country} required disabled />
+              </div>
+
+            </div>
+          </form>
         </div>
       </div>
 

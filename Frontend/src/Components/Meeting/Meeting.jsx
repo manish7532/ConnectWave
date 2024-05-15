@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import './meeting.css';
-import socketIOClient from 'socket.io-client';
 import ChatApp from '../Chat/msg';
 import QuesAns from '../QuesAns/QuesAns';
 import EmojiPicker from 'emoji-picker-react';
@@ -9,7 +8,9 @@ import { useLocation } from 'react-router-dom';
 import logoimg from '../images/logo nav.png'
 import axios from 'axios';
 import { useSocketContext } from '../Socket/SocketContext';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import copy from 'clipboard-copy';
 
 const peerConfigConnections = {
     "iceServers": [
@@ -300,14 +301,18 @@ const Meeting = () => {
     }
 
     let connectToSocketServer = async () => {
-        // try {
-        //     const userID = user.userdata._id;
-        //     const eventID = newEvent._id;
-        //     const role = newEvent.userID === user.userdata._id;
-        //     const response = await axios.post('https://localhost:8000/api/participants', { userID, eventID, role });
-        // } catch (error) {
-        //     console.log(error);
-        // }
+
+        //--------------------attendance-----------------------------------
+        try {
+            console.log('new Event data========>', JSON.stringify(newEvent))
+            const userID = user.userdata._id;
+            const eventID = newEvent._id;
+            const role = newEvent.organizerId === user.userdata._id;
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/participants`, { userID, eventID, role });
+        } catch (error) {
+            console.log(error);
+        }
+
         socketRef.current = socket;
 
         socketRef.current.on('signal', gotMessageFromServer);
@@ -318,92 +323,92 @@ const Meeting = () => {
         let data = [path, username, roomID, userID]
 
         // socketRef.current.on('connect', () => {
-            socketRef.current.emit('join-call', data)
-            socketIdRef.current = socketRef.current.id
-            data = [];
+        socketRef.current.emit('join-call', data)
+        socketIdRef.current = socketRef.current.id
+        data = [];
 
-            socketRef.current.on('user-left', (id) => {
-                setVideos((videos) => videos.filter((video) => video.socketId !== id))
-            })
+        socketRef.current.on('user-left', (id) => {
+            setVideos((videos) => videos.filter((video) => video.socketId !== id))
+        })
 
-            socketRef.current.on('user-joined', (id, clients, usernames, userIDs) => {
+        socketRef.current.on('user-joined', (id, clients, usernames, userIDs) => {
 
-                clients.forEach((socketListId, index) => {
-                    connections[socketListId] = new RTCPeerConnection(peerConfigConnections);
+            clients.forEach((socketListId, index) => {
+                connections[socketListId] = new RTCPeerConnection(peerConfigConnections);
 
-                    // Wait for their ice candidate       
-                    connections[socketListId].onicecandidate = function (event) {
-                        if (event.candidate != null) {
-                            socketRef.current.emit('signal', socketListId, JSON.stringify({ 'ice': event.candidate }));
-                        }
-                    }
-
-                    // Wait for their video stream
-                    connections[socketListId].onaddstream = (event) => {
-                        console.log("BEFORE:", videoRef.current);
-                        console.log("FINDING ID: ", socketListId);
-
-                        let videoExists = videoRef.current.find(video => video.socketId === socketListId);
-
-                        if (videoExists) {
-                            console.log("FOUND EXISTING");
-
-                            // Update the stream of the existing video
-                            setVideos(videos => {
-                                const updatedVideos = videos.map(video =>
-                                    video.socketId === socketListId ? { ...video, stream: event.stream, username: usernames[index], userID: userIDs[index] } : video
-                                );
-                                videoRef.current = updatedVideos;
-                                return updatedVideos;
-                            });
-                        } else {
-                            // Create a new video
-                            console.log("CREATING NEW");
-                            let newVideo = {
-                                socketId: socketListId,
-                                stream: event.stream,
-                                username: usernames[index], // Include username
-                                userID: userIDs[index], // Include userID
-                                autoplay: true,
-                                playsinline: true
-                            };
-
-                            setVideos(videos => {
-                                const updatedVideos = [...videos, newVideo];
-                                videoRef.current = updatedVideos;
-                                return updatedVideos;
-                            });
-                        }
-                    };
-
-                    // Add the local video stream
-                    if (window.localStream !== undefined && window.localStream !== null) {
-                        connections[socketListId].addStream(window.localStream);
-                    } else {
-                        let blackSilence = (...args) => new MediaStream([black(...args), silence()]);
-                        window.localStream = blackSilence();
-                        connections[socketListId].addStream(window.localStream);
-                    }
-                });
-
-                if (id === socketIdRef.current) {
-                    for (let id2 in connections) {
-                        if (id2 === socketIdRef.current) continue
-
-                        try {
-                            connections[id2].addStream(window.localStream)
-                        } catch (e) { }
-
-                        connections[id2].createOffer().then((description) => {
-                            connections[id2].setLocalDescription(description)
-                                .then(() => {
-                                    socketRef.current.emit('signal', id2, JSON.stringify({ 'sdp': connections[id2].localDescription }))
-                                })
-                                .catch(e => console.log(e))
-                        })
+                // Wait for their ice candidate       
+                connections[socketListId].onicecandidate = function (event) {
+                    if (event.candidate != null) {
+                        socketRef.current.emit('signal', socketListId, JSON.stringify({ 'ice': event.candidate }));
                     }
                 }
+
+                // Wait for their video stream
+                connections[socketListId].onaddstream = (event) => {
+                    console.log("BEFORE:", videoRef.current);
+                    console.log("FINDING ID: ", socketListId);
+
+                    let videoExists = videoRef.current.find(video => video.socketId === socketListId);
+
+                    if (videoExists) {
+                        console.log("FOUND EXISTING");
+
+                        // Update the stream of the existing video
+                        setVideos(videos => {
+                            const updatedVideos = videos.map(video =>
+                                video.socketId === socketListId ? { ...video, stream: event.stream, username: usernames[index], userID: userIDs[index] } : video
+                            );
+                            videoRef.current = updatedVideos;
+                            return updatedVideos;
+                        });
+                    } else {
+                        // Create a new video
+                        console.log("CREATING NEW");
+                        let newVideo = {
+                            socketId: socketListId,
+                            stream: event.stream,
+                            username: usernames[index], // Include username
+                            userID: userIDs[index], // Include userID
+                            autoplay: true,
+                            playsinline: true
+                        };
+
+                        setVideos(videos => {
+                            const updatedVideos = [...videos, newVideo];
+                            videoRef.current = updatedVideos;
+                            return updatedVideos;
+                        });
+                    }
+                };
+
+                // Add the local video stream
+                if (window.localStream !== undefined && window.localStream !== null) {
+                    connections[socketListId].addStream(window.localStream);
+                } else {
+                    let blackSilence = (...args) => new MediaStream([black(...args), silence()]);
+                    window.localStream = blackSilence();
+                    connections[socketListId].addStream(window.localStream);
+                }
             });
+
+            if (id === socketIdRef.current) {
+                for (let id2 in connections) {
+                    if (id2 === socketIdRef.current) continue
+
+                    try {
+                        connections[id2].addStream(window.localStream)
+                    } catch (e) { }
+
+                    connections[id2].createOffer().then((description) => {
+                        connections[id2].setLocalDescription(description)
+                            .then(() => {
+                                socketRef.current.emit('signal', id2, JSON.stringify({ 'sdp': connections[id2].localDescription }))
+                            })
+                            .catch(e => console.log(e))
+                    })
+                }
+            }
+        });
 
         // })
     }
@@ -439,20 +444,24 @@ const Meeting = () => {
         setScreen(!screen);
     }
 
-    let handleEndCall = () => {
+    let handleEndCall = async () => {
         try {
             const path = window.location.href;
             const id = socketIdRef.current
             let leaveArr = [path, id]
             socketRef.current.emit('leave', leaveArr);
-            socketRef.current.emit('disconnect', (leaveArr) => {
-                socketRef.current.emit('leave', leaveArr);
-            })
+
 
             let tracks = localVideoref.current.srcObject.getTracks()
             tracks.forEach(track => track.stop())
-        } catch (e) { }
-        window.location.href = `/feedback/?roomID=${roomID}`
+        } catch (e) { console.log(e) }
+
+
+        // ----------------------attendence after user left--------------------
+        const userID = user.userdata._id;
+        const eventID = newEvent._id;
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/participants-left`, { userID, eventID });
+        window.location.href = `/feedback/?roomID=${roomID}`;
     }
 
     let connect = () => {
@@ -508,6 +517,13 @@ const Meeting = () => {
     };
 
 
+    //--------------------- copy meeeting id--------------------------------
+    const handleCopy = (roomID) => {
+        copy(roomID)
+        toast.success("Meeting ID Copied", { position: 'top-center' })
+    }
+
+
 
     return (
         <>
@@ -537,7 +553,7 @@ const Meeting = () => {
 
                             <video id='localvideo' className={styles.meetUserVideo} ref={localVideoref} autoPlay muted></video>
                             <span className={styles.meetUserVideoname1}>a</span>
-                            <span className={styles.meetUserVideoname}>Me</span>
+                            <span className={styles.meetUserVideoname}>You</span>
 
                             <div className={styles.conferenceView}>
                                 {videos.map((video) => (
@@ -681,6 +697,10 @@ const Meeting = () => {
                                     <i className="far fa-comments"></i><br />
                                     <span style={{ fontSize: '1.5vh' }}>QnA</span>
                                 </a>
+                                <a className="btn text-light av" onClick={() => handleCopy(roomID)}>
+                                    <i className="fas fa-copy"></i><br />
+                                    <span style={{ fontSize: '1.5vh' }}>Copy ID</span>
+                                </a>
                             </div>
                         </div>
                         <div className="col-lg-2 col-md-2 col-sm-0">
@@ -689,6 +709,7 @@ const Meeting = () => {
                     </nav>
                 </div>
             }
+            <ToastContainer />
         </>
     );
 };

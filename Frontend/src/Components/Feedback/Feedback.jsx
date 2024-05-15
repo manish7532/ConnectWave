@@ -39,7 +39,7 @@ const Feedback = () => {
         event.preventDefault();
         try {
             // console.log(user.userdata._id)
-            const response = await axios.post('https://localhost:8000/api/feedback', {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/feedback`, {
                 eventID: roomID,
                 userID: user.userdata._id,
                 rating: selectedRatings,
@@ -68,7 +68,7 @@ const Feedback = () => {
 
     async function handleLogout() {
         try {
-            const response = await axios.get('https://localhost:8000/api/logout');
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/logout`);
             console.log('Logged out successfully');
             localStorage.removeItem("token");
             localStorage.removeItem("user");
@@ -78,7 +78,6 @@ const Feedback = () => {
         }
     }
 
-    const imgurl = `https://localhost:8000/uploads/${user.userdata._id}/${user.userdata.profilePhoto}`
     return (
         <>
             <nav className="navbar navbar-expand-lg text-light dnav" style={{ backgroundColor: "#001247" }} data-bs-theme="dark">
@@ -108,28 +107,10 @@ const Feedback = () => {
                                     <i className="bi bi-house"></i>&nbsp;Home
                                 </Link>
                             </li>
-                            {/* <li className="nav-item">
-                <a className="nav-link">
-                  <i className="bi bi-camera-video"></i>&nbsp;Meetings
-                </a>
-              </li> */}
-
-                            <li className="nav-item dropdown">
-                                <a data-bs-toggle="dropdown" className="nav-icon nav-link pe-md-0">
-                                    {user.userdata.profilePhoto ? <img src={imgurl} alt="" style={{ borderRadius: '50%', height: '4vh' }} /> :
-                                        <i className="fa-regular fa-user"></i>}&nbsp;{user && user.userdata.firstname}
+                            <li className="nav-item">
+                                <a className="nav-link" onClick={handleLogout}>
+                                    <i className="bi bi-box-arrow-right"></i>&nbsp;Logout
                                 </a>
-                                <div className="dropdown-menu dropdown-menu-end">
-                                    <a className="dropdown-item" data-bs-toggle="offcanvas" data-bs-target="#profileCanvas" aria-controls="offcanvasRight">
-                                        Profile
-                                    </a>
-                                    <a className="dropdown-item">
-                                        Setting
-                                    </a>
-                                    <a className="dropdown-item" onClick={handleLogout}>
-                                        Logout
-                                    </a>
-                                </div>
                             </li>
                         </ul>
                     </div>
@@ -199,7 +180,7 @@ const Feedback = () => {
                     </form>
                 </div>
             </div>
-            <ToastContainer/>
+            <ToastContainer />
         </>
     );
 };

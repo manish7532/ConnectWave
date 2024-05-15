@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import socketIOClient from 'socket.io-client';
 import './QuesAns.css';
 import { useSocketContext } from '../Socket/SocketContext';
 

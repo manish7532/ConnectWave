@@ -29,7 +29,7 @@ function Register() {
     setCountries(fetchedCountries);
     setData((prevData) => ({
       ...prevData,
-      country: 'AFG',
+      country: 'IN',
       type: 'Individual',
     }));
   }, []);
@@ -63,7 +63,7 @@ function Register() {
 
     try {
       if (data.password === data.confirmPassword) {
-        const response = await axios.post('https://localhost:8000/api/register', formData, {
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/register`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -103,7 +103,7 @@ function Register() {
           firstname: '',
           lastname: '',
           email: '',
-          country: 'AFG',
+          country: 'IN',
           type: 'Individual',
           password: '',
           confirmPassword: '',
