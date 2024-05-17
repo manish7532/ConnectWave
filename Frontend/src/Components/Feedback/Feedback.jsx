@@ -1,16 +1,15 @@
-import { useState } from 'react';
+import { useState , useEffect} from 'react';
 import './Feedback.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import logoimg from '../images/logo nav.png'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Feedback = () => {
 
-    let params = new URLSearchParams(window.location.search);
-    let roomID = params.get('roomID');
+    const [roomID, setRoomID] = useState(null);
     const [selectedRatings, setSelectedRatings] = useState(null);
     const [selected_ARatings, setSelected_ARatings] = useState(null);
     const [selected_VRatings, setSelected_VRatings] = useState(null);
@@ -18,6 +17,14 @@ const Feedback = () => {
     const navigate = useNavigate();
 
     const user = JSON.parse(localStorage.getItem("user"));
+
+    useEffect(() => {
+        const storedRoomID = localStorage.getItem('roomID');
+        if (storedRoomID) {
+            setRoomID(storedRoomID);
+            localStorage.removeItem('roomID'); 
+        }
+    }, []);
 
     const handleRatingClick = (value) => {
         setSelectedRatings(value === selectedRatings ? null : value);
@@ -47,8 +54,8 @@ const Feedback = () => {
                 videoQuality: selected_VRatings,
                 suggestion: suggestion
             });
-            console.log(response.data);
-            if (response.data.status === 201) {
+
+            if (response.status === 201) {
                 setSelectedRatings([]);
                 setSelected_ARatings([]);
                 setSelected_VRatings([]);

@@ -461,7 +461,8 @@ const Meeting = () => {
         const userID = user.userdata._id;
         const eventID = newEvent._id;
         const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/participants-left`, { userID, eventID });
-        window.location.href = `/feedback/?roomID=${roomID}`;
+        localStorage.setItem('roomID', roomID);
+        window.location.href = '/feedback';
     }
 
     let connect = () => {

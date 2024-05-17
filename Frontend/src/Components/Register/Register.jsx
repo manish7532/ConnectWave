@@ -81,7 +81,7 @@ function Register() {
             });
             break;
           case 2:
-            toast.error("Missing require Fields", {
+            toast.error("Missing required Fields", {
               position: "top-center"
             });
             break;
@@ -92,7 +92,7 @@ function Register() {
               toast.success('User registered successfully', {
                 position: "top-center"
               })
-              navigate('./login')
+              navigate('/login')
             }
             break;
           default:

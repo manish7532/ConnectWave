@@ -8,14 +8,12 @@ import copy from 'clipboard-copy';
 import CalendarClock from './CalendarClock';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { countryToAlpha2 } from "country-to-iso";
-import { Country } from 'country-state-city'
+
 
 function Dashboard() {
   const [scheduledMeetings, setScheduledMeetings] = useState([]);
   const [roomID, setRoomID] = useState();
   const navigate = useNavigate();
-  // const user = JSON.parse(localStorage.getItem("user"));
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
   const Schedule_eventRef = useRef(null);
   const btn_submit = useRef(null);
@@ -247,7 +245,7 @@ function Dashboard() {
     firstname: '',
     lastname: '',
     email: '',
-    country: '',
+    // country: '',
     type: '',
   })
 
@@ -256,15 +254,15 @@ function Dashboard() {
 
   useEffect(() => {
     if (user) {
-      const c = countryToAlpha2(user.userdata.country);
-      const country = Country.getCountryByCode(c);
+      // const c = countryToAlpha2(user.userdata.country);
+      // const country = Country.getCountryByCode(c);
       setData((prevData) => ({
         ...prevData,
         firstname: user.userdata.firstname,
         lastname: user.userdata.lastname,
         email: user.userdata.email,
         // type: user.userdata.type,
-        country: country.name,
+        // country: country.name,
       }));
     }
   }, [user]);
@@ -503,33 +501,33 @@ function Dashboard() {
 
 
           {/* -------------------------profile details update-------------------- */}
-          <form encType="multipart/form-data">
+          <form>
             <div className="row">
               <div className="col-md-12 mb-2">
                 <label htmlFor="firstName" className="form-label">
                   First Name
                 </label>
-                <input type="text" name="firstname" className="form-control" value={data.firstname} onChange={(e) => setData({ ...data, firstname: e.target.value })} required disabled />
+                <input type="text" name="firstname" className="form-control" value={data.firstname} onChange={(e) => setData({ ...data, firstname: e.target.value })}  disabled />
               </div>
               <div className="col-md-12 mb-2">
                 <label htmlFor="lastName" className="form-label">
                   Last Name
                 </label>
-                <input type="text" name="lastname" className="form-control" value={data.lastname} onChange={(e) => setData({ ...data, lastname: e.target.value })} required disabled />
+                <input type="text" name="lastname" className="form-control" value={data.lastname} onChange={(e) => setData({ ...data, lastname: e.target.value })}  disabled />
               </div>
               <div className="col-md-12 mb-2">
                 <label htmlFor="email" className="form-label">
                   Email
                 </label>
-                <input type="email" name="email" className="form-control" value={data.email} onChange={(e) => setData({ ...data, email: e.target.value })} required disabled />
+                <input type="email" name="email" className="form-control" value={data.email} onChange={(e) => setData({ ...data, email: e.target.value })}  disabled />
               </div>
-              <div className="col-md-12 mb-2">
+              {/* <div className="col-md-12 mb-2">
                 <label htmlFor="country" className="form-label">
                   Country
                 </label>
 
-                <input type="text" name="country" className="form-control" value={data.country} required disabled />
-              </div>
+                <input type="text" name="country" className="form-control" value={data.country}  disabled />
+              </div> */}
 
             </div>
           </form>
