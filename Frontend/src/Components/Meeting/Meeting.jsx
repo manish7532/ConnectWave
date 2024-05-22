@@ -4,7 +4,7 @@ import ChatApp from '../Chat/msg';
 import QuesAns from '../QuesAns/QuesAns';
 import EmojiPicker from 'emoji-picker-react';
 import styles from './Video.module.css'
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import logoimg from '../images/logo nav.png'
 import axios from 'axios';
 import { useSocketContext } from '../Socket/SocketContext';
@@ -81,7 +81,9 @@ const Meeting = () => {
     };
 
     const handleEmojiClick = (emojiObject) => {
-        socket.emit('emoji', emojiObject.emoji);
+        let emo = emojiObject.emoji;
+        let path = window.location.href;
+        socket.emit('emoji', { emo, path });
         setShowEmojiPicker(false);
         setShowChat(false);
         setShowQuesAns(false);
@@ -92,8 +94,8 @@ const Meeting = () => {
             setConnectedUsers(users);
         });
 
-        socket.on('sendEmoji', (emojiObject) => {
-            setReceivedEmoji(emojiObject);
+        socket.on('sendEmoji', (emo) => {
+            setReceivedEmoji(emo);
             setTimeout(() => {
                 setReceivedEmoji(null);
             }, 2000);
@@ -110,16 +112,42 @@ const Meeting = () => {
         getPermissions();
     }, [])
 
+    // let getDislayMedia = () => {
+    //     if (screen) {
+    //         if (navigator.mediaDevices.getDisplayMedia) {
+    //             navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+    //                 .then(getDislayMediaSuccess)
+    //                 .then((stream) => { })
+    //                 .catch((e) => console.log(e))
+    //         }
+    //     }
+    // }
+
+    //--------------------screen shared --------------------------------
     let getDislayMedia = () => {
-        if (screen) {
-            if (navigator.mediaDevices.getDisplayMedia) {
-                navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-                    .then(getDislayMediaSuccess)
-                    .then((stream) => { })
-                    .catch((e) => console.log(e))
-            }
+        if (navigator.mediaDevices.getDisplayMedia) {
+            navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+                .then((stream) => {
+                    getDislayMediaSuccess(stream);
+                    window.screenStream = stream;
+                    document.getElementById('screenShare').innerHTML = 'Stop Sharing';
+
+                })
+                .catch((e) => console.log(e));
         }
     }
+
+
+    const stopDisplayMedia = () => {
+        if (window.screenStream) {
+            let tracks = window.screenStream.getTracks();
+            tracks.forEach(track => track.stop());
+            getUserMedia()
+            document.getElementById('screenShare').innerHTML = 'Share Screen';
+        }
+    }
+
+
 
     const getPermissions = async () => {
         try {
@@ -208,7 +236,7 @@ const Meeting = () => {
 
             let blackSilence = (...args) => new MediaStream([black(...args), silence()])
             window.localStream = blackSilence()
-            localVideoref.current.srcObject = window.localStream
+            localVideoref.current.srcObject = window.localStream;
 
             for (let id in connections) {
                 connections[id].addStream(window.localStream)
@@ -304,7 +332,7 @@ const Meeting = () => {
 
         //--------------------attendance-----------------------------------
         try {
-            console.log('new Event data========>', JSON.stringify(newEvent))
+            // console.log('new Event data========>', JSON.stringify(newEvent))
             const userID = user.userdata._id;
             const eventID = newEvent._id;
             const role = newEvent.organizerId === user.userdata._id;
@@ -413,6 +441,7 @@ const Meeting = () => {
         // })
     }
 
+
     let silence = () => {
         let ctx = new AudioContext()
         let oscillator = ctx.createOscillator()
@@ -421,11 +450,39 @@ const Meeting = () => {
         ctx.resume()
         return Object.assign(dst.stream.getAudioTracks()[0], { enabled: false })
     }
+
+
+    // let black = ({ width = 640, height = 480 } = {}) => {
+    //     let canvas = Object.assign(document.createElement("canvas"), { width, height })
+    //     canvas.getContext('2d').fillRect(0, 0, width, height)
+    //     let stream = canvas.captureStream()
+    //     return Object.assign(stream.getVideoTracks()[0], { enabled: false })
+    // }
+
     let black = ({ width = 640, height = 480 } = {}) => {
-        let canvas = Object.assign(document.createElement("canvas"), { width, height })
-        canvas.getContext('2d').fillRect(0, 0, width, height)
-        let stream = canvas.captureStream()
-        return Object.assign(stream.getVideoTracks()[0], { enabled: false })
+        // Retrieve user data from localStorage
+        let user = JSON.parse(localStorage.getItem('user'));
+        let fullName = `${user.userdata.firstname} ${user.userdata.lastname}`;
+        console.log('fullname=========>', fullName)
+
+        // Extract initials
+        let names = fullName.split(' ');
+        let initials = names.map(name => name.charAt(0).toUpperCase()).join('');
+
+        // Create canvas and draw initials
+        let canvas = Object.assign(document.createElement("canvas"), { width, height });
+        let context = canvas.getContext('2d');
+        context.fillStyle = 'white';
+        context.fillRect(0, 0, width, height);
+
+        context.fillStyle = 'white';
+        context.font = 'bold 100px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(initials, width / 2, height / 2);
+
+        let stream = canvas.captureStream();
+        return Object.assign(stream.getVideoTracks()[0], { enabled: false });
     }
 
     let handleVideo = () => {
@@ -435,43 +492,89 @@ const Meeting = () => {
         setAudio(!audio)
     }
 
+
+
+
     useEffect(() => {
-        if (screen !== undefined) {
+        if (screen) {
             getDislayMedia();
+            let path = window.location.href;
+            socket.emit('fullScreen', path);
+
+        } else {
+            if (window.screenStream) {
+                stopDisplayMedia();
+                let path = window.location.href;
+                socket.emit('normalScreen', path);
+
+            }
         }
-    }, [screen])
+    }, [screen]);
+
+
+
+    let handleFullScreen = () => {
+        if (newEvent.organizerId != user.userdata._id) {
+            document.querySelectorAll('.notmain').forEach(function (element) {
+                element.classList.add('revid');
+            });
+            document.querySelector('.mainvid').classList.add('hostvid');
+        }
+    }
+    socket.on('fullScreen', () => { handleFullScreen() });
+
+
+
+    let handleNormalScreen = () => {
+        if (newEvent.organizerId != user.userdata._id) {
+            document.querySelectorAll('.notmain').forEach(function (element) {
+                element.classList.remove('revid');
+            });
+            document.querySelector('.mainvid').classList.remove('hostvid');
+        }
+    }
+    socket.on('normalScreen', () => { handleNormalScreen() });
+
+
+
     let handleScreen = () => {
-        setScreen(!screen);
+        // setScreen(!screen);
+        setScreen(prevScreen => !prevScreen);
     }
 
+    const navigate = useNavigate()
     let handleEndCall = async () => {
         try {
-          const path = window.location.href;
-          const id = socketIdRef.current;
-          let leaveArr = [path, id];
-          socketRef.current.emit("leave", leaveArr);
-    
-          let tracks = localVideoref.current.srcObject.getTracks();
-          tracks.forEach((track) => track.stop());
-    
-    
-          if (newEvent.organizerId === user.userdata._id) {
-            window.location.href= "/dashboard";
-          } else {
-    
-            const userID = user.userdata._id;
-            const eventID = newEvent && newEvent._id;
-            const response = await axios.post(
-              `${import.meta.env.VITE_API_URL}/api/participants-left`,
-              { userID, eventID }
-            );
-            localStorage.setItem("roomID", roomID);
-            window.location.href = "/feedback";
-          }
+            const path = window.location.href;
+            const id = socketIdRef.current;
+            let leaveArr = [path, id];
+            socketRef.current.emit("leave", leaveArr);
+            let tracks = localVideoref.current.srcObject.getTracks();
+            tracks.forEach((track) => track.stop());
+            if (newEvent.organizerId === user.userdata._id) {
+                navigate("/dashboard");
+            } else {
+                const userID = user.userdata._id;
+                const eventID = newEvent && newEvent._id;
+                const response = await axios.post(
+                    `${import.meta.env.VITE_API_URL}/api/participants-left`,
+                    { userID, eventID }
+                );
+                localStorage.setItem("roomID", roomID);
+                navigate("/feedback");
+            }
         } catch (e) {
-          console.log(e);
+            console.log(e);
         }
-      };
+    };
+
+
+
+
+
+
+
+
 
     let connect = () => {
         setAskForUsername(false);
@@ -532,11 +635,15 @@ const Meeting = () => {
         toast.success("Meeting ID Copied", { position: 'top-center' })
     }
 
+    useEffect(() => {
+        if (window.innerWidth > 767) {
+            toggleChat();
+        }
+    }, [])
 
 
     return (
         <>
-
             {askForUsername === true ?
                 <>
                     <nav className="navbar navbar-expand-lg text-light dnav" style={{ backgroundColor: "#001247" }} data-bs-theme="dark">
@@ -560,46 +667,82 @@ const Meeting = () => {
                     <div className='row m-0 d-flex meetingdiv ' style={{ height: '87vh', backgroundColor: "black" }}>
                         <div className={`col-md-9 my-auto d-md-block ${showUserList || showChat || showQuesAns ? 'd-none' : ''} `} >
 
-                            <video id='localvideo' className={styles.meetUserVideo} ref={localVideoref} autoPlay muted></video>
-                            <span className={styles.meetUserVideoname1}>a</span>
-                            <span className={styles.meetUserVideoname}>You</span>
+                            {video ? <><video id='localvideo' className={styles.meetUserVideo} ref={localVideoref} autoPlay muted></video>
+                                {/* <span className={styles.meetUserVideoname1}>a</span> */}
+                                <span className={styles.meetUserVideoname}>You</span></>
+                                : <>
+                                    <div id='localvideo' style={{ border: '.1px solid grey', width: '13vw', minWidth: '150px', borderRadius: '8px', color: 'white' }} className={`${styles.meetUserVideo} d-flex justify-content-center align-items-center`}>
+                                        <span style={{ borderRadius: '50%', backgroundColor: '#737ce2', width: '4vw', minWidth: '66px', height: '8vh' }}><p className='text-center fs-3 mt-2'>{user.userdata.firstname.charAt(0).toUpperCase()}{user.userdata.lastname.charAt(0).toUpperCase()}</p></span>
+                                    </div>
+                                </>}
 
                             <div className={styles.conferenceView}>
-                                {videos.map((video) => (
+                                {videos.map((v) => (
+                                    newEvent.organizerId === v.userID ? <>
+                                        <div className='position-relative'>
+                                            <video key={v.socketId}
+                                                className={`${styles.remoteVid}  mainvid`}
+                                                style={{ border: '.2px solid gray', borderRadius: '8px' }}
+                                                data-socket={v.socketId}
+                                                ref={(ref) => {
+                                                    if (ref && v.stream) {
+                                                        ref.srcObject = v.stream;
+                                                    }
+                                                }}
+                                                autoPlay
+                                            />
+                                            <p className={`${styles.username} text-center`}>{v.username}</p>
+                                        </div>
+                                    </>
 
-                                    <div key={video.socketId} >
+                                        : <>
+                                            <div className='position-relative'>
+                                                <video key={v.socketId} className={`${styles.remoteVid}  notmain`}
+                                                    style={{ border: '.2px solid gray', borderRadius: '8px' }}
+                                                    data-socket={v.socketId}
+                                                    ref={ref => {
+                                                        if (ref && v.stream) {
+                                                            ref.srcObject = v.stream;
+                                                        }
+                                                    }}
+                                                    autoPlay muted
+                                                >
+                                                </video>
+                                                <p className={`${styles.username} notmain text-center`}>{v.username}</p>
+                                            </div>
+                                        </>
+                                ))}
+                            </div>
 
-                                        {newEvent.organizerId === video.userID ? <video className={styles.hostvideo}
-                                            data-socket={video.socketId}
-                                            ref={ref => {
-                                                if (ref && video.stream) {
-                                                    ref.srcObject = video.stream;
+                            {/* <div className={styles.conferenceView}>
+                                {videos.map((v) => (
+                                    <div key={v.socketId} className='position-relative' data-socket={v.socketId}>
+                                        <video className={`${newEvent.organizerId === v.userID ? 'remoteVid mainvid' : 'notmain remoteVid'}`}
+                                            ref={(ref) => {
+                                                if (ref && v.stream) {
+                                                    ref.srcObject = v.stream;
                                                 }
                                             }}
                                             autoPlay
-                                        >
-                                        </video>
-                                            :
-                                            <video className={styles.remoteVid}
-                                                data-socket={video.socketId}
-                                                ref={ref => {
-                                                    if (ref && video.stream) {
-                                                        ref.srcObject = video.stream;
-                                                    }
-                                                }}
-                                                autoPlay muted
-                                            ><span >{video.username}</span>
-                                            </video>
-                                        }
-                                        <p className='text-center'>{video.username}</p>
+                                            muted={newEvent.organizerId !== v.userID}
+                                            style={{ border: '.2px solid gray', borderRadius: '8px' }}
+                                        />
+                                        <p className={`${styles.username} text-center`}>{v.username}</p>
                                     </div>
                                 ))}
-                            </div>
+                            </div> */}
+
+
+
+
+
+
+
 
                             {/* emoji display */}
                             {receivedEmoji && (
                                 <div className="emoji-container" style={{ position: 'fixed' }}>
-                                    <span role="img" aria-label="emoji" style={{ fontSize: '55px' }}>{receivedEmoji.emojiObject} </span>
+                                    <span role="img" aria-label="emoji" style={{ fontSize: '55px' }}>{receivedEmoji.emo} </span>
                                 </div>
                             )}
 
@@ -682,11 +825,11 @@ const Meeting = () => {
                                 {newEvent.organizerId === user.userdata._id && screenAvailable === true ?
                                     <a className="btn text-light av" onClick={handleScreen} type="button">
                                         <i className="bi bi-arrow-up-square-fill"></i><br />
-                                        <span style={{ fontSize: '1.5vh' }}>Screen Sharing</span>
+                                        <span style={{ fontSize: '1.5vh' }} id='screenShare'>Share Screen</span>
                                     </a>
                                     : <></>
                                 }
-                                <a className="btn text-light av" type="button" onClick={toggleChat}>
+                                <a className="btn text-light av chatbtn" type="button" onClick={toggleChat}>
                                     <i className="fa-solid fa-message" ></i><br />
                                     <span style={{ fontSize: '1.5vh' }}>Chat</span>
                                 </a>

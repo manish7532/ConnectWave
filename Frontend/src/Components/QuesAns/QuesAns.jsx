@@ -15,10 +15,10 @@ const QuesAns = ({ organizerId }) => {
         socket.on("response", (data) => {
             setResponse(prevResponse => [...prevResponse, data]);
         });
-        
+
         return () => {
             socket.off("response");
-          };
+        };
     }, []);
 
     useEffect(() => {
@@ -29,7 +29,7 @@ const QuesAns = ({ organizerId }) => {
         e.preventDefault();
         if (QueAns.trim() !== '' && socket) {
             const userID = user.userdata._id
-            socket.emit('QueAns', { user: user.userdata.firstname + " " + user.userdata.lastname, QueAns, userID });
+            socket.emit('QueAns', { user: user.userdata.firstname + " " + user.userdata.lastname, QueAns, userID, path: window.location.href });
             setQueAns('');
         }
     };

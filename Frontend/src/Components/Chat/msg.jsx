@@ -10,9 +10,8 @@ const ChatApp = () => {
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-  
-    socket.emit('joined', user.userdata.firstname + " " +user.userdata.lastname);
-    
+    socket.emit('joined', user.userdata.firstname + " " + user.userdata.lastname);
+
     socket.on("sendmessage", (data) => {
       setReceivedMessages(prevMessages => [...prevMessages, data]);
       // console.log("---->", data);
@@ -22,7 +21,7 @@ const ChatApp = () => {
       socket.off("sendmessage");
     };
   }, []);
-  
+
   useEffect(() => {
     chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     // console.log(receivedMessages)
@@ -31,39 +30,39 @@ const ChatApp = () => {
   const handleMessageSubmit = (e) => {
     e.preventDefault();
     if (message.trim() !== '' && socket) {
-      socket.emit('message', { user: user.userdata.firstname + " " +user.userdata.lastname, message });
+      socket.emit('message', { user: user.userdata.firstname + " " + user.userdata.lastname, message, path: window.location.href });
       setMessage('');
     }
   };
 
   return (
-    <div className="chatpage "  style={{ height: '88vh', overflow: 'hidden'}}>
+    <div className="chatpage " style={{ height: '88vh', overflow: 'hidden' }}>
       <div className="chatContainer" style={{ overflow: "hidden" }}>
-        <div className="col-md-4 col-sm-12 col-12"  style={{ width: "100%", marginRight: "-20px" }}>
+        <div className="col-md-4 col-sm-12 col-12" style={{ width: "100%", marginRight: "-20px" }}>
           <div className="box box-warning direct-chat direct-chat-warning" >
             <div className="box-header with-border">
               <h3 className="box-title">Chat Messages</h3>
             </div>
-            <div className="box-body"  style={{ overflowY: "auto", height: "calc(83vh - 12vh)" }}>
-              <div className="direct-chat-messages" ref={chatMessagesRef} style={{ minHeight:'70vh', overflowY: "auto", WebkitOverflowScrolling: "touch",scrollbarWidth:"none" }}>
+            <div className="box-body" style={{ overflowY: "auto", height: "calc(83vh - 12vh)" }}>
+              <div className="direct-chat-messages" ref={chatMessagesRef} style={{ minHeight: '70vh', overflowY: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
                 {receivedMessages.map((data, index) => (
                   <div
                     key={index}
-                    className={`direct-chat-msg w-100 ${data.user === user.userdata.firstname + " " +user.userdata.lastname ? 'left' : 'right'}`}
+                    className={`direct-chat-msg w-100 ${data.user === user.userdata.firstname + " " + user.userdata.lastname ? 'left' : 'right'}`}
                   >
-                    <div className={`direct-chat-info clearfix ${data.user === user.userdata.firstname + " " +user.userdata.lastname ? 'text-end' : 'text-start'}`}>
+                    <div className={`direct-chat-info clearfix ${data.user === user.userdata.firstname + " " + user.userdata.lastname ? 'text-end' : 'text-start'}`}>
                       <span className={`direct-chat-name `}>{data.user}</span>
 
                     </div>
-                    <div className={`direct-chat-text ${data.user === user.userdata.firstname + " " +user.userdata.lastname ? 'float-end' : 'float-start'}`}>{data.message}</div>
+                    <div className={`direct-chat-text ${data.user === user.userdata.firstname + " " + user.userdata.lastname ? 'float-end' : 'float-start'}`}>{data.message}</div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="box-footer" style={{ bottom:"0" }}>
-              <form  onSubmit={handleMessageSubmit}>
+            <div className="box-footer" style={{ bottom: "0" }}>
+              <form onSubmit={handleMessageSubmit}>
                 <div className="input-group">
-                  <input 
+                  <input
                     type="text"
                     name="message"
                     placeholder="Type Message ..."

@@ -74,6 +74,18 @@ io.on('connection', (socket) => {
         }
     })
 
+    socket.on('fullScreen', (path) => {
+        for (let a = 0; a < connections[path].length; a++) {
+            io.to(connections[path][a].id).emit('fullScreen');
+        }
+    })
+    socket.on('normalScreen', (path) => {
+        for (let a = 0; a < connections[path].length; a++) {
+            io.to(connections[path][a].id).emit('normalScreen');
+        }
+    })
+
+
 
 
 
@@ -82,7 +94,6 @@ io.on('connection', (socket) => {
 
     // ------------------ chat , QNA, reactions
     socket.on('joined', (user) => {
-        // console.log(`${user} has joined`);
         if (!connectedUsers.includes(user)) {
             connectedUsers.push(user);
             io.emit('userList', connectedUsers);
@@ -90,16 +101,23 @@ io.on('connection', (socket) => {
         socket.user = user;
     });
 
-    socket.on('message', ({ user, message }) => {
-        io.emit('sendmessage', { user, message });
+    socket.on('message', ({ user, message, path }) => {
+        for (let a = 0; a < connections[path].length; a++) {
+            io.to(connections[path][a].id).emit('sendmessage', { user, message });
+        }
     });
 
-    socket.on('emoji', (emojiObject) => {
-        io.emit('sendEmoji', { emojiObject });
+    socket.on('emoji', ({ emo, path }) => {
+        for (let a = 0; a < connections[path].length; a++) {
+            io.to(connections[path][a].id).emit('sendEmoji', { emo });
+        }
     });
 
-    socket.on('QueAns', ({ user, QueAns, userID }) => {
-        io.emit('response', { user, QueAns, userID });
+    socket.on('QueAns', ({ user, QueAns, userID, path }) => {
+
+        for (let a = 0; a < connections[path].length; a++) {
+            io.to(connections[path][a].id).emit('response', { user, QueAns, userID });
+        }
     })
 
 
@@ -205,8 +223,10 @@ app.post('/api/register', (req, res) => {
             if (files.profilePhoto) {
                 const file = files.profilePhoto;
                 const newFilePath = path.join(userFolderPath, file[0].originalFilename);
-                await fs.promises.rename(file[0].filepath, newFilePath);
-                await User.updateOne({ _id: newUser._id }, { $set: { profilePhoto: newFilePath } })
+                const profilephotoname = file[0].originalFilename
+                await fs.promises.copyFile(file[0].filepath, newFilePath);
+                await fs.promises.unlink(file[0].filepath);
+                await User.updateOne({ _id: newUser._id }, { $set: { profilePhoto: profilephotoname } })
             }
 
             res.status(201).json(3);
@@ -263,10 +283,13 @@ app.post('/api/organization', (req, res) => {
             }
 
             if (logoFile) {
+                const org_logo_name = logoFile.originalFilename
                 const logoFilePath = path.join(orgFolderPath, logoFile.originalFilename);
-                await fs.promises.rename(logoFile.filepath, logoFilePath);
+                // await fs.promises.rename(logoFile.filepath, logoFilePath);
+                await fs.promises.copyFile(logoFile.filepath, logoFilePath);
+                await fs.promises.unlink(logoFile.filepath);
 
-                newOrganization.logo = logoFilePath;
+                newOrganization.logo = org_logo_name;
                 await newOrganization.save();
             }
 
@@ -323,10 +346,10 @@ app.get('/api/verify', isAuthenticated, (req, res) => {
     res.status(200).json({ message: "User authorized" });
 });
 
-// Logout route 
-app.get('/api/logout', (req, res) => {
-    res.status(200).json({ message: 'Logged out successfully' });
-});
+// // Logout route 
+// app.get('/api/logout', (req, res) => {
+//     res.status(200).json({ message: 'Logged out successfully' });
+// });
 
 //generate otp function defination
 const generateOTP = () => {
@@ -637,7 +660,9 @@ app.post('/api/profilePhoto', (req, res) => {
                 fs.mkdirSync(userFolderPath, { recursive: true });
             }
             removeAllFilesSync(userFolderPath) // deleting previous files
-            await fs.promises.rename(file[0].filepath, newFilePath);
+            // await fs.promises.rename(file[0].filepath, newFilePath);
+            await fs.promises.copyFile(file[0].filepath, newFilePath);
+            await fs.promises.unlink(file[0].filepath);
             user.profilePhoto = newFileName;
             await user.save();
 

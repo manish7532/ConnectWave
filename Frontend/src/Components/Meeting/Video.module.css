@@ -1,13 +1,15 @@
 .meetUserVideo {
+    z-index: 1;
     position: absolute;
     bottom: 15vh;
     height: 20vh;
     width: auto;
-    left: 0;
+    left: 5px;
     z-index: 0;
     overflow-y: hidden !important;
-    border-radius: 20px;
+    border-radius: 8px;
 }
+
 .meetUserVideoname {
     width: 5vw;
     color: rgb(183, 185, 189);
@@ -15,30 +17,66 @@
     bottom: 15vh;
     left: 5vw;
 }
-.meetUserVideoname1 {
-    background-color: rgba(0, 0, 0, 0.253);
-    color: rgba(0, 0, 0, 0);
-    width: 30vw;
-    position: absolute;
-    bottom: 15vh;
-    left: 0vw;
-}
+
 
 
 .conferenceView {
     display: flex;
-    flex-wrap: wrap; 
-    justify-content: center; 
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
+    gap: 10px;
+    position: relative;
 }
 
 .remoteVid {
-    width: 25vw;
-    border-radius: 10px; 
-    box-sizing: border-box; 
+    width: 15vw;
+    justify-content: center !important;
+    border-radius: 10px;
+    box-sizing: border-box;
 }
-.hostvideo {
-    width: 48vw;
-    border-radius: 10px; 
-    box-sizing: border-box; 
+
+/* .hostvideo {
+    width: 24vw;
+    border-radius: 10px;
+    box-sizing: border-box;
+} */
+
+
+
+.username {
+    position: absolute;
+    font-size: 1vw;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+
+
+
+@media (max-width: 500px) {
+    .remoteVid {
+        width: 80vw;
+        border-radius: 10px;
+        box-sizing: border-box;
+    }
+
+    .username {
+        position: absolute;
+        font-size: 3vw;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 2px 5px;
+        border-radius: 3px;
+    }
+
+
 }

@@ -73,7 +73,7 @@ function Register() {
 
         window.scrollTo(0, 0);
         const responseData = response.data;
-        console.log(responseData);
+        // console.log(responseData);
         switch (response.data) {
           case 1:
             toast.error("User Already Exists", {

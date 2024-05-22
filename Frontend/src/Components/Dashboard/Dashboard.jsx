@@ -18,9 +18,6 @@ function Dashboard() {
   const Schedule_eventRef = useRef(null);
   const btn_submit = useRef(null);
 
-  // useEffect(() => {
-  //   setUser()
-  // }, [])
 
   const handleJoinMeeting = async () => {
     document.getElementById('modalcls').click()
@@ -140,7 +137,6 @@ function Dashboard() {
   //------------log out------------------------
   async function handleLogout() {
     try {
-      const response = await axios.get(`${import.meta.env}/api/logout`);
       console.log('Logged out successfully');
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -149,40 +145,6 @@ function Dashboard() {
       console.error('Logout error:', error);
     }
   }
-
-  // const checkAuthentication = async () => {
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     const user = JSON.parse(localStorage.getItem("user"));
-  //     if (!token || !user) {
-  //       navigate('/login');
-  //       return;
-  //     }
-
-  //     const response = await axios.get('https://localhost:8000/api/verify', {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`
-  //       }
-  //     });
-
-  //     if (response.status === 200) {
-  //       console.log("User is authenticated");
-  //     } else {
-  //       navigate('/login');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error:', error);
-  //     navigate('/login');
-  //   }
-  // };
-
-  // useEffect(() => {
-
-  //   setTimeout(() => {
-  //     checkAuthentication();
-  //   })
-
-  // }, []);
 
 
   // -------------------------------new Meeting-----------------------------------
@@ -245,7 +207,6 @@ function Dashboard() {
     firstname: '',
     lastname: '',
     email: '',
-    // country: '',
     type: '',
   })
 
@@ -254,15 +215,11 @@ function Dashboard() {
 
   useEffect(() => {
     if (user) {
-      // const c = countryToAlpha2(user.userdata.country);
-      // const country = Country.getCountryByCode(c);
       setData((prevData) => ({
         ...prevData,
         firstname: user.userdata.firstname,
         lastname: user.userdata.lastname,
         email: user.userdata.email,
-        // type: user.userdata.type,
-        // country: country.name,
       }));
     }
   }, [user]);
@@ -418,14 +375,11 @@ function Dashboard() {
               </div>
               <div className="col-sm-6 mb-3">
                 <Link to={'/meetingHistory'} className="btn btn-lg btn-primary ctrls">
-                  {/* <i className="fas fa-arrow-up mb-2"></i> */}
+
                   <i className="fas fa-history"></i>
                   <span className="label">Meetings</span>
                 </Link>
-                {/* <a className="btn btn-lg btn-primary ctrls">
-                  <i className="fas fa-arrow-up mb-2"></i>
-                  <span className="label">Share Screen</span>
-                </a> */}
+
               </div>
             </div>
           </div>
@@ -507,27 +461,20 @@ function Dashboard() {
                 <label htmlFor="firstName" className="form-label">
                   First Name
                 </label>
-                <input type="text" name="firstname" className="form-control" value={data.firstname} onChange={(e) => setData({ ...data, firstname: e.target.value })}  disabled />
+                <input type="text" name="firstname" className="form-control" value={data.firstname} onChange={(e) => setData({ ...data, firstname: e.target.value })} disabled />
               </div>
               <div className="col-md-12 mb-2">
                 <label htmlFor="lastName" className="form-label">
                   Last Name
                 </label>
-                <input type="text" name="lastname" className="form-control" value={data.lastname} onChange={(e) => setData({ ...data, lastname: e.target.value })}  disabled />
+                <input type="text" name="lastname" className="form-control" value={data.lastname} onChange={(e) => setData({ ...data, lastname: e.target.value })} disabled />
               </div>
               <div className="col-md-12 mb-2">
                 <label htmlFor="email" className="form-label">
                   Email
                 </label>
-                <input type="email" name="email" className="form-control" value={data.email} onChange={(e) => setData({ ...data, email: e.target.value })}  disabled />
+                <input type="email" name="email" className="form-control" value={data.email} onChange={(e) => setData({ ...data, email: e.target.value })} disabled />
               </div>
-              {/* <div className="col-md-12 mb-2">
-                <label htmlFor="country" className="form-label">
-                  Country
-                </label>
-
-                <input type="text" name="country" className="form-control" value={data.country}  disabled />
-              </div> */}
 
             </div>
           </form>

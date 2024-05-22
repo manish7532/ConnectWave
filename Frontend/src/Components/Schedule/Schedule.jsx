@@ -34,7 +34,7 @@ const ScheduleMeetingForm = () => {
     async function handleLogout() {
         try {
             // const response = await axios.get('http://192.168.39.79:8000/api/logout');
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/logout`);
+            // const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/logout`);
             console.log('Logged out successfully');
             localStorage.removeItem("token");
             localStorage.removeItem("user");
