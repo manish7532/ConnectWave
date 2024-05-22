@@ -1,20 +1,19 @@
 import logoimg from "../images/logo nav.png"
-import '../Schedule/Schedule.css';
 import { Link } from 'react-router-dom';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import './meetingHistory.css'
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
-
-function MeetingHistory() {
+ChartJS.register(ArcElement, Tooltip, Legend);
+function AnalyticsReport() {
     const navigate = useNavigate()
     const user = JSON.parse(localStorage.getItem("user"));
-    const [meetings, setMeetings] = useState([]);
+    const [successRates, setSuccessRates] = useState({});
 
     async function handleLogout() {
         try {
-            // const response = await axios.get('https://192.168.39.79:8000/api/logout');
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/logout`);
             console.log('Logged out successfully');
             localStorage.removeItem("token");
@@ -31,27 +30,56 @@ function MeetingHistory() {
             const eventData = response.data.meetings.map(async (meeting) => {
                 const fb = await axios.post(`${import.meta.env.VITE_API_URL}/api/getAnalytics`, { roomID: meeting.eventID });
                 const ev = await axios.post(`${import.meta.env.VITE_API_URL}/api/getEvent`, { roomID: meeting.eventID });
-                const d = new Date(meeting.joinedAt)
-                const d1 = new Date(meeting.leftAt)
                 ev.data.event.successRate = fb.data.successRate;
-                ev.data.event.successRatecolor = fb.data.successRatecolor;
-                ev.data.event.joinedAt = d.toString();
-                ev.data.event.leftAt = d1.toString();
-                ev.data.event.duration = parseInt(meeting.duration);
                 ev.data.event.role = meeting.role;
+
                 return ev.data.event;
             });
             const resolvedEvents = await Promise.all(eventData);
-            setMeetings(resolvedEvents);
+
+            // Calculate success rates for chart
+            const rates = resolvedEvents.reduce((acc, meeting) => {
+                if (meeting.role === 'host') {
+                    acc[meeting.successRate] = (acc[meeting.successRate] || 0) + 1;
+                }
+                return acc;
+            }, {});
+
+            setSuccessRates(rates);
         } catch (error) {
             console.log(error)
         }
     }
 
+
     useEffect(() => {
         getMyMeetings();
     }, [])
-
+    
+  // Prepare data for the pie chart
+  const data = {
+    labels: Object.keys(successRates),
+    datasets: [
+        {
+            label: 'Success Rate',
+            data: Object.values(successRates),
+            backgroundColor: [
+                // 'Lemonchiffon',
+                // 'Darksalmon',
+                // 'Palevioletred',
+                // 'Purple',
+                // 'cyan',
+                // 'Palegreen'
+                '#0b4695',
+                '#0f5fc9',
+                '#317bdf',
+                '#639be5',
+                '#95baea',
+                '#ccdcf0',
+            ],
+        },
+    ],
+};
 
     return (
         <>
@@ -96,23 +124,15 @@ function MeetingHistory() {
             </nav>
 
             <div className="container d-flex flex-column align-items-center justify-content-center mt-5" >
-                <h3 className="text-center">Meeting Records</h3>
-                {meetings.map((meeting, index) => (
-                    <div key={index} className="eventCard card m-2" data-bs-theme='dark' >
-                        <div className="card-body">
-                            <h4 className="card-title">{meeting.title}</h4>
-                            {/* <p className="card-text">EventId: {meeting._id}</p> */}
-                            <p className="card-text">Role: {meeting.role}</p>
-                            <p className="card-text">Joined at: {meeting.joinedAt}</p>
-                            <p className="card-text">Left at: {meeting.leftAt}</p>
-                            <p className="card-text">Attended Duration: {meeting.duration} {meeting.duration <= 1 ? 'minute' : 'minutes'}</p>
-                            {meeting.role == 'host' ? (meeting.successRate ? <p>Success Rate: <span style={{ color: `${meeting.successRatecolor}` }}>{meeting.successRate}</span></p> : <p>Success Rate: There are no feedbacks to determine success rate </p>) : <></>}
-                        </div>
-                    </div>
-                ))}
+                <h3 className="text-center">Analytics Report</h3>
+                
+                <div className="mt-5">
+                    <h3 className="text-center">Success Rate Distribution</h3>
+                    <Pie data={data} />
+                </div>
             </div>
         </>
     )
 }
 
-export default MeetingHistory;
+export default AnalyticsReport;

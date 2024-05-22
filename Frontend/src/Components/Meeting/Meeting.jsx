@@ -446,24 +446,32 @@ const Meeting = () => {
 
     let handleEndCall = async () => {
         try {
-            const path = window.location.href;
-            const id = socketIdRef.current
-            let leaveArr = [path, id]
-            socketRef.current.emit('leave', leaveArr);
-
-
-            let tracks = localVideoref.current.srcObject.getTracks()
-            tracks.forEach(track => track.stop())
-        } catch (e) { console.log(e) }
-
-
-        // ----------------------attendence after user left--------------------
-        const userID = user.userdata._id;
-        const eventID = newEvent._id;
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/participants-left`, { userID, eventID });
-        localStorage.setItem('roomID', roomID);
-        window.location.href = '/feedback';
-    }
+          const path = window.location.href;
+          const id = socketIdRef.current;
+          let leaveArr = [path, id];
+          socketRef.current.emit("leave", leaveArr);
+    
+          let tracks = localVideoref.current.srcObject.getTracks();
+          tracks.forEach((track) => track.stop());
+    
+    
+          if (newEvent.organizerId === user.userdata._id) {
+            window.location.href= "/dashboard";
+          } else {
+    
+            const userID = user.userdata._id;
+            const eventID = newEvent && newEvent._id;
+            const response = await axios.post(
+              `${import.meta.env.VITE_API_URL}/api/participants-left`,
+              { userID, eventID }
+            );
+            localStorage.setItem("roomID", roomID);
+            window.location.href = "/feedback";
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      };
 
     let connect = () => {
         setAskForUsername(false);

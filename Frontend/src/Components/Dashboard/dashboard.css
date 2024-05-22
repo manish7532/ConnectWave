@@ -70,7 +70,6 @@ body {
 }
 
 .modal-dialog {
-    width: 50% !important;
     max-width: 450px;
     max-height: 80vh;
     margin-top: 15vh;
@@ -90,4 +89,8 @@ body {
 
 .mLabel {
     color: #ffffff;
+}
+
+.modal{
+    padding: 30px;
 }

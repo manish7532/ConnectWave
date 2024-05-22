@@ -87,10 +87,6 @@ const feedbackSchema = new Schema({
 // Analytics Schema
 const analyticsSchema = new Schema({
     eventID: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
-    interactiveFeaturesID: { type: Schema.Types.ObjectId, ref: 'InteractiveFeatures' },
-    feedbacksID: { type: Schema.Types.ObjectId, ref: 'Feedbacks' },
-    audienceSatisfaction: { type: Number },
-    engagementMetrics: { type: Number },
     successRate: { type: String }
 });
 

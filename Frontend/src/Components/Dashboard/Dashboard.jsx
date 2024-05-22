@@ -340,11 +340,11 @@ function Dashboard() {
           <div className="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
             <ul className="navbar-nav mb-2 mb-lg-0 align-items-center">
 
-              {/* <li className="nav-item">
-                <Link to={'/meetingHistory'} className="nav-link" >
-                  <i height='4vh' className="bi bi-camera-video"></i>&nbsp;Meetings
+              <li className="nav-item">
+                <Link to={'/AnalyticsReport'} className="nav-link" >
+                  <i height='4vh' className="fa fa-pie-chart" aria-hidden="true" ></i>&nbsp;Report
                 </Link>
-              </li> */}
+              </li>
 
               <li className="nav-item dropdown">
                 <a data-bs-toggle="dropdown" className="nav-icon nav-link pe-md-0">
@@ -387,7 +387,7 @@ function Dashboard() {
                   <span className="label">Join</span>
                 </a>
 
-                <div className="modal fade" id="exampleModal" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div className="modal  fade" id="exampleModal" aria-labelledby="exampleModalLabel" aria-hidden="true">
                   <div className="modal-dialog">
                     <div className="modal-content">
                       <div className="modal-header">

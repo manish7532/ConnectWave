@@ -9,6 +9,8 @@ import ResetPass from './Components/ResetPass/ResetPass'
 import Feedback from './Components/Feedback/Feedback'
 import Schedule from './Components/Schedule/Schedule'
 import MeetingHistory from "./Components/MeetingHistory/MeetingHistory"
+import AnalyticsReport from './Components/Analytics/Analytics'
+
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect } from "react"
 import axios from "axios"
@@ -80,6 +82,7 @@ function App() {
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/meetingHistory" element={<MeetingHistory />} />
+        <Route path="/AnalyticsReport" element={<AnalyticsReport />} />
       </Routes>
     </>
   )

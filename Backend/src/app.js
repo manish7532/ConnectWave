@@ -1,5 +1,5 @@
 import express from 'express';
-import { Mongoose, User, Organization, Event, Participant, Feedback } from './model/db.js';
+import { Mongoose, User, Organization, Event, Participant, Feedback, Analytics } from './model/db.js';
 import morgan from 'morgan';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
@@ -649,3 +649,66 @@ app.post('/api/profilePhoto', (req, res) => {
         }
     });
 });
+
+
+
+
+
+// ------------- feeedback data for analysis------------------------
+app.post('/api/getAnalytics', async (req, res) => {
+    try {
+        const eventID = req.body.roomID;
+        const feedbacks = await Feedback.find({ eventID: eventID });
+
+        if (feedbacks.length > 0) {
+            let a = 0;
+            feedbacks.forEach(feed => {
+                console.log('feed.audienceSatisfaction=======>', feed.audienceSatisfaction)
+                a += parseInt(feed.audienceSatisfaction)
+            })
+            a = a / feedbacks.length;
+            let successRate = '';
+            let successRatecolor = ''
+            switch (Math.floor(a)) {
+                case 1:
+                    successRate = `very Poor`;
+                    successRatecolor = 'red'
+                    break;
+                case 2:
+                    successRate = 'Poor';
+                    successRatecolor = 'orange'
+                    break;
+                case 3:
+                    successRate = 'Average';
+                    successRatecolor = 'yellow'
+                    break;
+                case 4:
+                    successRate = 'Good';
+                    successRatecolor = 'cyan'
+                    break;
+                case 5:
+                    successRate = 'Very Good';
+                    successRatecolor = 'green'
+                    break;
+                default:
+                    successRate = "can't determine";
+                    break;
+            }
+            // Store the success rate in the analytics collection
+            const existingAnalytics = await Analytics.findOne({ eventID })
+            if (!existingAnalytics) {
+                const analytics = new Analytics({
+                    eventID,
+                    successRate
+                });
+                await analytics.save();
+            }
+            res.status(201).json({ successRate, successRatecolor });
+        }
+        else {
+            res.status(200).send('');
+        }
+    } catch (error) {
+        res.status(404).send('Something went wrong');
+    }
+})
