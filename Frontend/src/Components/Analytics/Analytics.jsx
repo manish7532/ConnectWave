@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Pie } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Bar } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+
 function AnalyticsReport() {
     const navigate = useNavigate()
     const user = JSON.parse(localStorage.getItem("user"));
@@ -55,31 +57,89 @@ function AnalyticsReport() {
     useEffect(() => {
         getMyMeetings();
     }, [])
-    
-  // Prepare data for the pie chart
-  const data = {
-    labels: Object.keys(successRates),
-    datasets: [
-        {
-            label: 'Success Rate',
-            data: Object.values(successRates),
-            backgroundColor: [
-                // 'Lemonchiffon',
-                // 'Darksalmon',
-                // 'Palevioletred',
-                // 'Purple',
-                // 'cyan',
-                // 'Palegreen'
-                '#0b4695',
-                '#0f5fc9',
-                '#317bdf',
-                '#639be5',
-                '#95baea',
-                '#ccdcf0',
-            ],
+
+    const labelColors = {
+        'Very Good': ' rgba(0, 255, 119, 0.575)',
+        'Good': 'rgba(75, 192, 192,0.4)',
+        'Average': 'rgba(255, 205, 86,0.4)',
+        'Poor': 'rgba(254, 150, 47,0.4)',
+        'very Poor': 'rgba(255, 99, 132,0.4)',
+        'undefined': 'rgba(102, 103, 108, 0.54)'
+    };
+    const borderColors = {
+        'Very Good': ' rgb(0, 255, 119)',
+        'Good': 'rgb(75, 192, 192)',
+        'Average': 'rgb(255, 205, 86)',
+        'Poor': 'rgb(254, 150, 47)',
+        'very Poor': 'rgb(255, 99, 132)',
+        'undefined': 'rgb(102, 103, 108)'
+    };
+    // Prepare data for the chart
+    const data = {
+        labels: Object.keys(successRates),
+        datasets: [
+            {
+                label: 'Success Rate',
+                data: Object.values(successRates),
+                backgroundColor: Object.keys(successRates).map(label => labelColors[label]),
+                borderColor: Object.keys(successRates).map(label => borderColors[label]),
+                borderWidth: 2
+            }],
+
+    };
+
+
+
+    const options = {
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Success Rate', // X-axis label
+                    color: 'white',
+                    font: {
+                        size: 20,
+                    },
+                },
+                ticks: {
+                    color: 'white',
+                    font: {
+                        size: 14,
+                    },
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.2)',
+                },
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Number of Meetings', // Y-axis label
+                    color: 'white',
+                    font: {
+                        size: 20,
+                    },
+                },
+                ticks: {
+                    color: 'white',
+                    font: {
+                        size: 14,
+                    },
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.2)',
+                },
+            },
         },
-    ],
-};
+        plugins: {
+            legend: {
+                display: false,
+            },
+        },
+    };
+
 
     return (
         <>
@@ -124,11 +184,11 @@ function AnalyticsReport() {
             </nav>
 
             <div className="container d-flex flex-column align-items-center justify-content-center mt-5" >
-                <h3 className="text-center">Analytics Report</h3>
-                
-                <div className="mt-5">
+                {/* <h3 className="text-center">Analytics Report</h3> */}
+
+                <div className="mt-5" style={{ width: '80%', height: '450px' }}>
                     <h3 className="text-center">Success Rate Distribution</h3>
-                    <Pie data={data} />
+                    <Bar data={data} options={options} />
                 </div>
             </div>
         </>
