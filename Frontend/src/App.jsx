@@ -28,7 +28,7 @@ function App() {
     '/register/organization',
     '/login',
     '/reset',
-    'resetPass'
+    '/resetPass'
   ];
 
   const shouldCheckAuthentication = !pathsToExcludeFromAuthentication.includes(location.pathname);

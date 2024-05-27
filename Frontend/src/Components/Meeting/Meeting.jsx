@@ -551,17 +551,17 @@ const Meeting = () => {
             socketRef.current.emit("leave", leaveArr);
             let tracks = localVideoref.current.srcObject.getTracks();
             tracks.forEach((track) => track.stop());
+            const userID = user.userdata._id;
+            const eventID = newEvent && newEvent._id;
+            const response = await axios.post(
+                `${import.meta.env.VITE_API_URL}/api/participants-left`,
+                { userID, eventID }
+            );
             if (newEvent.organizerId === user.userdata._id) {
-                navigate("/dashboard");
+                window.location.href = "/dashboard";
             } else {
-                const userID = user.userdata._id;
-                const eventID = newEvent && newEvent._id;
-                const response = await axios.post(
-                    `${import.meta.env.VITE_API_URL}/api/participants-left`,
-                    { userID, eventID }
-                );
                 localStorage.setItem("roomID", roomID);
-                navigate("/feedback");
+                window.location.href = "/feedback";
             }
         } catch (e) {
             console.log(e);
